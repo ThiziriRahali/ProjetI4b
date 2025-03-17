@@ -4,6 +4,7 @@ import java.util.Random;
 class Obstacle extends Thread {
     private int x;
     private int y;
+    private int ma;
     private boolean active = true;
     private static final int WIDTH = 10;
     private static final int HEIGHT = 10;
@@ -41,7 +42,6 @@ public class FroggerGamer {
     private static final int WIDTH = 10;
     private static final int HEIGHT = 10;
     private static final String FROG_CHAR = "🐸";
-    private static final String FROGy_CHAR = "🐸";
     private static final String FROGDEAD_CHAR = "⚰️";
     private static String FROGACT = FROG_CHAR;
     private static final String ROAD_CHAR = ".";
@@ -65,7 +65,7 @@ public class FroggerGamer {
         lives = 3;
         obstacles = new Obstacle[5];
         for (int i = 0; i < obstacles.length; i++) {
-            obstacles[i] = new Obstacle(i * 4, HEIGHT / 2 - 2);
+            obstacles[i] = new Obstacle(i * 4, HEIGHT / 2 - 2); // Éviter le terre-plein
             obstacles[i].start();
         }
         
@@ -78,7 +78,7 @@ public class FroggerGamer {
         System.out.println("Merci d'avoir joué !");
 
     }
-
+    
     private static void render() {
         clearScreen();
         
@@ -87,8 +87,12 @@ public class FroggerGamer {
             for (int x = 0; x < WIDTH; x++) {
                 if(frogY == 0 && frogY == y && frogX%5==0 && frogX == x){
                     System.out.print(FROG_WIN);
-                } else if (y == 0 && x%5==0) {
-                    System.out.print(FINISH_LINE_CHAR);
+                } else if (y == 0) {
+                    if(x%5 == 0){
+                        System.out.print(FINISH_LINE_CHAR);
+                    }else{
+                        System.out.print("🧱");
+                    }
                 } else if (x == frogX && y == frogY) {
                     System.out.print(FROGACT);
                 } else if (y == HEIGHT / 2) {
@@ -115,7 +119,7 @@ public class FroggerGamer {
     
     private static void update(char move) {
         switch (move) {
-            case 'z': if (frogY > 0) frogY--; break;
+            case 'z': if (frogY > 1 ^ (frogY == 1 && frogX%5==0)) frogY--; break;
             case 's': if (frogY < HEIGHT - 1) frogY++; break;
             case 'q': if (frogX > 0) frogX--; break;
             case 'd': if (frogX < WIDTH - 1) frogX++; break;
@@ -170,13 +174,8 @@ public class FroggerGamer {
         }
     }
     private static void exitGame() {
-        System.out.println("\033[0m\033c"); 
-        
-        for (Obstacle obs : obstacles) 
-        {
-            obs.interrupt();
-        }
-        System.exit(0); 
+        System.out.println("\033[0m\033c"); // Réinitialiser l'affichage ANSI
+        System.exit(0);  // Quitter le programme
     }
     
     private static void clearScreen() {
