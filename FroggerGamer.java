@@ -39,6 +39,7 @@ class Obstacle extends Thread {
 
 public class FroggerGamer {
     public static final String FINISH_LINE_CHAR = "🏁";
+    public static final String WALL_CHAR = "🧱";
     private static final int WIDTH = 10;
     private static final int HEIGHT = 10;
     private static final String FROG_CHAR = "🐸";
@@ -91,7 +92,7 @@ public class FroggerGamer {
                     if(x%5 == 0){
                         System.out.print(FINISH_LINE_CHAR);
                     }else{
-                        System.out.print("🧱");
+                        System.out.print(WALL_CHAR);
                     }
                 } else if (x == frogX && y == frogY) {
                     System.out.print(FROGACT);
