@@ -87,8 +87,12 @@ public class FroggerGamer {
             for (int x = 0; x < WIDTH; x++) {
                 if(frogY == 0 && frogY == y && frogX%5==0 && frogX == x){
                     System.out.print(FROG_WIN);
-                } else if (y == 0 && x%5==0) {
-                    System.out.print(FINISH_LINE_CHAR);
+                } else if (y == 0) {
+                    if(x%5 == 0){
+                        System.out.print(FINISH_LINE_CHAR);
+                    }else{
+                        System.out.print("🧱");
+                    }
                 } else if (x == frogX && y == frogY) {
                     System.out.print(FROGACT);
                 } else if (y == HEIGHT / 2) {
