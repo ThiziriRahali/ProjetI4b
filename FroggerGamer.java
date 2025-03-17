@@ -51,13 +51,11 @@ public class FroggerGamer {
     private static boolean running;
     private static Obstacle[] obstacles;
     private static int lives;
-<<<<<<< HEAD
     private static final String MESSAGE = "Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer : ";    
     private static boolean paused = false;
     private static boolean gagne = false;
-=======
     public static Arrivals A = new Arrivals();
->>>>>>> 7ce1b5b (les arrivées)
+    private static final int DIFFICULTE = 500; 
     
     public static void main(String[] args) {
         startGame();
@@ -86,7 +84,7 @@ public class FroggerGamer {
                     System.out.print(MESSAGE);
                 }
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(DIFFICULTE);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -169,13 +167,9 @@ public class FroggerGamer {
         if (frogY == 0 && frogX % 5 == 0) {
             Arrivals.addWPosition(frogX, frogY); 
             render(); 
-<<<<<<< HEAD
             gagne = true;
-            System.out.println("🎉 Félicitations ! Vous avez gagné ! La grenouille est devenue un prince ! Quel incroyable comte de fée !");
-=======
             System.out.println("🎉 Félicitations ! Un prince est apparu à cette place !");
             continuePlay();
->>>>>>> 7ce1b5b (les arrivées)
             pause(1000);
         
             if (Arrivals.GlobalWin()) {
@@ -191,18 +185,36 @@ public class FroggerGamer {
     private static synchronized void checkCollision() {
         if (isObstacleAt(frogX, frogY)) {
             lives--;
-            paused = true; // Bloquer le jeu temporairement
+            paused = true;
             clearScreen();
             System.out.println("💀 Un obstacle vous a écrasé ! Il vous reste " + lives + " vies. 💀");
-            pause(1000); // Cooldown avant réaffichage
-            paused = false; // Réactiver le jeu après la pause
+            pause(1000); 
+            paused = false; 
             if (lives <= 0) {
-                System.out.println("Game Over !");
+                AfficherGameOver();
                 askReplay();
                 return;
             }
             resetFrog();
         }
+    }
+    public static void AfficherGameOver(){
+        System.out.println("⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣠⡀⠀\n" + //
+                        "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⣤⠀⠀⠀⢀⣴⣿⡶⠀⣾⣿⣿⡿⠟⠛⠁\n" + //
+                        "⠀⠀⠀⠀⠀⠀⣀⣀⣄⣀⠀⠀⠀⠀⣶⣶⣦⠀⠀⠀⠀⣼⣿⣿⡇⠀⣠⣿⣿⣿⠇⣸⣿⣿⣧⣤⠀⠀⠀\n" + //
+                        "⠀⠀⢀⣴⣾⣿⡿⠿⠿⠿⠇⠀⠀⣸⣿⣿⣿⡆⠀⠀⢰⣿⣿⣿⣷⣼⣿⣿⣿⡿⢀⣿⣿⡿⠟⠛⠁⠀⠀\n" + //
+                        "⠀⣴⣿⡿⠋⠁⠀⠀⠀⠀⠀⠀⢠⣿⣿⣹⣿⣿⣿⣿⣿⣿⡏⢻⣿⣿⢿⣿⣿⠃⣼⣿⣯⣤⣴⣶⣿⡤⠀\n" + //
+                        "⣼⣿⠏⠀⣀⣠⣤⣶⣾⣷⠄⣰⣿⣿⡿⠿⠻⣿⣯⣸⣿⡿⠀⠀⠀⠁⣾⣿⡏⢠⣿⣿⠿⠛⠋⠉⠀⠀⠀\n" + //
+                        "⣿⣿⠲⢿⣿⣿⣿⣿⡿⠋⢰⣿⣿⠋⠀⠀⠀⢻⣿⣿⣿⠇⠀⠀⠀⠀⠙⠛⠀⠀⠉⠁⠀⠀⠀⠀⠀⠀⠀\n" + //
+                        "⠹⢿⣷⣶⣿⣿⠿⠋⠀⠀⠈⠙⠃⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n" + //
+                        "⠀⠀⠈⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣤⣴⣶⣦⣤⡀⠀\n" + //
+                        "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡀⠀⠀⠀⠀⠀⠀⠀⣠⡇⢰⣶⣶⣾⡿⠷⣿⣿⣿⡟⠛⣉⣿⣿⣿⠆\n" + //
+                        "⠀⠀⠀⠀⠀⠀⢀⣤⣶⣿⣿⡎⣿⣿⣦⠀⠀⠀⢀⣤⣾⠟⢀⣿⣿⡟⣁⠀⠀⣸⣿⣿⣤⣾⣿⡿⠛⠁⠀\n" + //
+                        "⠀⠀⠀⠀⣠⣾⣿⡿⠛⠉⢿⣦⠘⣿⣿⡆⠀⢠⣾⣿⠋⠀⣼⣿⣿⣿⠿⠷⢠⣿⣿⣿⠿⢻⣿⣧⠀⠀⠀\n" + //
+                        "⠀⠀⠀⣴⣿⣿⠋⠀⠀⠀⢸⣿⣇⢹⣿⣷⣰⣿⣿⠃⠀⢠⣿⣿⢃⣀⣤⣤⣾⣿⡟⠀⠀⠀⢻⣿⣆⠀⠀\n" + //
+                        "⠀⠀⠀⣿⣿⡇⠀⠀⢀⣴⣿⣿⡟⠀⣿⣿⣿⣿⠃⠀⠀⣾⣿⣿⡿⠿⠛⢛⣿⡟⠀⠀⠀⠀⠀⠻⠿⠀⠀\n" + //
+                        "⠀⠀⠀⠹⣿⣿⣶⣾⣿⣿⣿⠟⠁⠀⠸⢿⣿⠇⠀⠀⠀⠛⠛⠁⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀\n" + //
+                        "⠀⠀⠀⠀⠈⠙⠛⠛⠛⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀");
     }
     
     private static void resetFrog() {
