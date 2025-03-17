@@ -67,8 +67,8 @@ java -cp bin client.Client
 
 ## 📢 Contributeurs
 
-👨‍💻 **[Ton Nom]**  
-👨‍💻 **Coéquipier (si applicable)**  
+👨‍💻 **RAHALI Thiziri**  
+👨‍💻 **THIEBLEMONT Jérémy**  
 
 ## 📄 Licence
 
