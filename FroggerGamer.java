@@ -4,7 +4,6 @@ import java.util.Random;
 class Obstacle extends Thread {
     private int x;
     private int y;
-    private int ma;
     private boolean active = true;
     private static final int WIDTH = 10;
     private static final int HEIGHT = 10;
@@ -174,8 +173,13 @@ public class FroggerGamer {
         }
     }
     private static void exitGame() {
-        System.out.println("\033[0m\033c"); // Réinitialiser l'affichage ANSI
-        System.exit(0);  // Quitter le programme
+        System.out.println("\033[0m\033c"); 
+        
+        for (Obstacle obs : obstacles) 
+        {
+            obs.interrupt();
+        }
+        System.exit(0); 
     }
     
     private static void clearScreen() {
