@@ -1,8 +1,11 @@
 import java.util.Random;
 
+// Ceci est un test
+
 class Obstacle extends Thread {
     private int x;
     private int y;
+    private boolean isTest = False;
     private boolean active = true;
     private static final int WIDTH = 10;
     private static final int HEIGHT = 10;
