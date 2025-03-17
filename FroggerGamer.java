@@ -1,11 +1,11 @@
-import java.util.Random;
+import java.util.*;
 
 
 class Obstacle extends Thread {
     private int x;
     private int y;
     private boolean active = true;
-    private static final int WIDTH = 10;
+    public static final int WIDTH = 10;
     private static final int HEIGHT = 10;
     public static final String OBSTACLE_CHAR = "🚣";
     public static final String FINISH_LINE_CHAR = "🏁";
@@ -51,12 +51,17 @@ public class FroggerGamer {
     private static boolean running;
     private static Obstacle[] obstacles;
     private static int lives;
+<<<<<<< HEAD
     private static final String MESSAGE = "Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer : ";    
     private static boolean paused = false;
     private static boolean gagne = false;
+=======
+    public static Arrivals A = new Arrivals();
+>>>>>>> 7ce1b5b (les arrivées)
     
     public static void main(String[] args) {
         startGame();
+        Arrivals A = new Arrivals();
     }
     
     private static void startGame() {
@@ -69,7 +74,7 @@ public class FroggerGamer {
         lives = 3;
         obstacles = new Obstacle[5];
         for (int i = 0; i < obstacles.length; i++) {
-            obstacles[i] = new Obstacle(i * 4, HEIGHT / 2 - 2); // Éviter le terre-plein
+            obstacles[i] = new Obstacle(i * 4, HEIGHT / 2 - 2); 
             obstacles[i].start();
         }
         
@@ -98,6 +103,23 @@ public class FroggerGamer {
         System.out.println("Merci d'avoir joué !");
 
     }
+    private static void resetGame() {
+        FROGACT = FROG_CHAR;
+        frogX = WIDTH / 2;
+        frogY = HEIGHT - 1;
+        running = true;
+        lives = 3;
+
+        
+        Arrivals.setTotalArrivals(2); 
+        Arrivals.ClearwPositions();
+
+        obstacles = new Obstacle[5];
+        for (int i = 0; i < obstacles.length; i++) {
+            obstacles[i] = new Obstacle(i * 4, HEIGHT / 2 - 2); 
+            obstacles[i].start();  
+        }
+    }
     
     private static void render() {
         clearScreen();
@@ -105,7 +127,7 @@ public class FroggerGamer {
         System.out.println("Vies restantes : " + lives);
         for (int y = 0; y < HEIGHT; y++) {
             for (int x = 0; x < WIDTH; x++) {
-                if(frogY == 0 && frogY == y && frogX%5==0 && frogX == x){
+                if (Arrivals.isWPosition(x, y)) {
                     System.out.print(FROG_WIN);
                 } else if (y == 0) {
                     if(x%5 == 0){
@@ -125,8 +147,7 @@ public class FroggerGamer {
                 System.out.print("\t");
             }
             System.out.println();
-        }
-    }
+        }}
     
     private static boolean isObstacleAt(int x, int y) {
         for (Obstacle obs : obstacles) {
@@ -145,13 +166,24 @@ public class FroggerGamer {
             case 'd': if (frogX < WIDTH - 1) frogX++; break;
             case 'x':  exitGame(); break;
         }
-        if (frogY == 0 && frogX%5==0) {
+        if (frogY == 0 && frogX % 5 == 0) {
+            Arrivals.addWPosition(frogX, frogY); 
             render(); 
+<<<<<<< HEAD
             gagne = true;
             System.out.println("🎉 Félicitations ! Vous avez gagné ! La grenouille est devenue un prince ! Quel incroyable comte de fée !");
+=======
+            System.out.println("🎉 Félicitations ! Un prince est apparu à cette place !");
+            continuePlay();
+>>>>>>> 7ce1b5b (les arrivées)
             pause(1000);
-            askReplay();
-            return;
+        
+            if (Arrivals.GlobalWin()) {
+                System.out.println("🏆 TOUS les emplacements sont remplis ! VOUS AVEZ GAGNÉ ! 🏆");
+                pause(1000);
+                askReplay(); // Demander si on veut rejouer
+                return;
+            }
         }
         checkCollision();
     }
@@ -177,12 +209,26 @@ public class FroggerGamer {
         frogX = WIDTH / 2;
         frogY = HEIGHT - 1;
     }
+    private static void continuePlay(){
+        if ( Arrivals.GlobalWin() )
+        {
+            System.out.println("Vous avez gagné, Génial!!");
+            askReplay();
+
+        }
+        else{
+            System.out.println("Remplissez toutes les arrivées!!!");
+            startGame();
+        }
+       
+
+    }
     
     private static void askReplay() {
         System.out.print("Voulez-vous rejouer ? (y/n) : ");
         char choice = Lire.c();
         if (choice == 'y') {
-            startGame();
+            resetGame();
         } else {
             exitGame();
         }
@@ -196,12 +242,13 @@ public class FroggerGamer {
         }
     }
     private static void exitGame() {
-        System.out.println("\033[0m\033c"); // Réinitialiser l'affichage ANSI
-        System.exit(0);  // Quitter le programme
+        System.out.println("\033[0m\033c"); 
+        System.exit(0); 
     }
     
     private static void clearScreen() {
         System.out.print("\033[H\033[2J");
         System.out.flush();
     }
+    
 }
