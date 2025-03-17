@@ -4,7 +4,6 @@ import java.util.Random;
 class Obstacle extends Thread {
     private int x;
     private int y;
-    private int ma;
     private boolean active = true;
     private static final int WIDTH = 10;
     private static final int HEIGHT = 10;
@@ -43,7 +42,6 @@ public class FroggerGamer {
     private static final int WIDTH = 10;
     private static final int HEIGHT = 10;
     private static final String FROG_CHAR = "🐸";
-    private static final String FROGDEAD_CHAR = "⚰️";
     private static String FROGACT = FROG_CHAR;
     private static final String ROAD_CHAR = ".";
     private static final String TERRE_PLEIN_CHAR = "🌱";
@@ -53,12 +51,17 @@ public class FroggerGamer {
     private static boolean running;
     private static Obstacle[] obstacles;
     private static int lives;
+    private static final String MESSAGE = "Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer : ";    
+    private static boolean paused = false;
+    private static boolean gagne = false;
     
     public static void main(String[] args) {
         startGame();
     }
     
     private static void startGame() {
+        gagne = false;
+        paused = false;
         FROGACT = FROG_CHAR;
         frogX = WIDTH / 2;
         frogY = HEIGHT - 1;
@@ -70,11 +73,27 @@ public class FroggerGamer {
             obstacles[i].start();
         }
         
+        Thread renderThread = new Thread(() -> {
+            while (running) {
+                if (!paused && !gagne) {
+                    render();
+                    checkCollision(); // Vérifier si un obstacle passe sur la grenouille
+                    System.out.print(MESSAGE);
+                }
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        renderThread.start();
+
         while (running) {
-            render();
-            System.out.print("Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer: ");
-            char move = Lire.c();  
-            update(move);
+            if (!paused) {
+                char move = Lire.c();
+                update(move);
+            }
         }
         System.out.println("Merci d'avoir joué !");
 
@@ -128,28 +147,30 @@ public class FroggerGamer {
         }
         if (frogY == 0 && frogX%5==0) {
             render(); 
+            gagne = true;
             System.out.println("🎉 Félicitations ! Vous avez gagné ! La grenouille est devenue un prince ! Quel incroyable comte de fée !");
             pause(1000);
             askReplay();
             return;
         }
-        
-        
+        checkCollision();
+    }
+
+    private static synchronized void checkCollision() {
         if (isObstacleAt(frogX, frogY)) {
-            FROGACT = FROGDEAD_CHAR;
-            render();
             lives--;
-            System.out.println("Vous avez touché un obstacle ! Il vous reste " + lives + " vies.");
+            paused = true; // Bloquer le jeu temporairement
+            clearScreen();
+            System.out.println("💀 Un obstacle vous a écrasé ! Il vous reste " + lives + " vies. 💀");
+            pause(1000); // Cooldown avant réaffichage
+            paused = false; // Réactiver le jeu après la pause
             if (lives <= 0) {
                 System.out.println("Game Over !");
                 askReplay();
                 return;
             }
-            FROGACT = FROG_CHAR;
-            pause(1000);
             resetFrog();
         }
-        
     }
     
     private static void resetFrog() {
