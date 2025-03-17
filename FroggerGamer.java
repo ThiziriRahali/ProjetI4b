@@ -4,6 +4,7 @@ import java.util.Random;
 class Obstacle extends Thread {
     private int x;
     private int y;
+    private int ma;
     private boolean active = true;
     private static final int WIDTH = 10;
     private static final int HEIGHT = 10;
