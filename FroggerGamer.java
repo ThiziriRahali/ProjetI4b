@@ -55,6 +55,7 @@ public class FroggerGamer {
     public static void main(String[] args) {
         startGame();
     }
+    /////////////////////rgp ierhgyuzegfuygfg
     
     private static void startGame() {
         FROGACT = FROG_CHAR;
@@ -77,6 +78,8 @@ public class FroggerGamer {
         System.out.println("Merci d'avoir joué !");
 
     }
+
+    /////////////////:z ofgzuryfg zf spdfgerg er2g er g0
     
     private static void render() {
         clearScreen();
