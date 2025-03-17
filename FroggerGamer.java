@@ -50,16 +50,102 @@ public class FroggerGamer {
     private static int frogY;
     private static boolean running;
     private static Obstacle[] obstacles;
-    private static int lives;
+    private static int LIVES_MAX = 3;
+    public static int nbVieActuel;
     private static final String MESSAGE = "Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer : ";    
-    private static boolean paused = false;
+    private static boolean paused =false;
     private static boolean gagne = false;
     public static Arrivals A = new Arrivals();
     private static final int DIFFICULTE = 500; 
-    
+
     public static void main(String[] args) {
+        choix();
+    }
+
+    public static void choix() {
+        boolean quitter = false;
+
+        while (!quitter) {
+            afficherMenuPrincipal();
+            int choix = Lire.i();
+
+            switch (choix) {
+                case 1:
+                    modeSolo();
+                    break;
+                case 2:
+                    //modeMultijoueur();
+                    break;
+                case 3:
+                    parametrerJeu();
+                    break;
+                case 4:
+                    quitter = true;
+                    break;
+                default:
+                    System.out.println("Choix invalide. Veuillez réessayer.");
+            }
+        }
+
+        System.out.println("Merci d'avoir joué !");
+        System.exit(0);
+    }
+
+    private static void modeSolo() {
+        System.out.println("\n--- Mode Solo ---");
+        // Logique du mode solo
+        System.out.println("Lancement du mode solo avec " + LIVES_MAX + " vies");
+        miseValeur();
+    }
+
+    private static void afficherMenuPrincipal() {
+        System.out.println("\n=== Menu Principal ===");
+        System.out.println("1. Mode Solo");
+        System.out.println("2. FUTUR Mode Multijoueur");
+        System.out.println("3. Paramètres");
+        System.out.println("4. Quitter");
+        System.out.print("Veuillez choisir une option : ");
+    }
+
+    private static void parametrerJeu() {
+        boolean retourMenu = false;
+    
+        while (!retourMenu) {
+            System.out.println("\n=== Paramètres du Jeu ===");
+            System.out.println("1. Modifier le nombre de vies (Actuel : " + LIVES_MAX + ")");
+            /*System.out.println("2. Modifier le nombre d'obstacles (Actuel : " + obstacles.length + ")");
+            System.out.println("3. Modifier le nombre d'arrivées (Actuel : " + A.getNbArrives() + ")");*/
+            System.out.println("4. Retour au menu principal");
+            System.out.print("Votre choix : ");
+    
+            int choix = Lire.i();
+    
+            switch (choix) {
+                case 1:
+                    System.out.print("Entrez le nouveau nombre de vies : ");
+                    LIVES_MAX = Lire.i();
+                    break;
+                /*case 2 :, " +
+                obstacles.length + " obstacles, et " + A.getNbArrives() + " arrivée(s)."
+                    System.out.print("Entrez le nouveau nombre d'obstacles : ");
+                    nombreDObstacles = lireEntier(scanner, nombreDObstacles);
+                    break;
+                case 3:
+                    System.out.print("Entrez le nouveau nombre d'arrivées : ");
+                    nombreDArrivees = lireEntier(scanner, nombreDArrivees);
+                    break;*/
+                case 4:
+                    retourMenu = true;
+                    break;
+                default:
+                    System.out.println("❌ Choix invalide. Veuillez réessayer.");
+            }
+        }
+    }
+
+    public static void miseValeur(){
+        nbVieActuel = LIVES_MAX;
         startGame();
-        Arrivals A = new Arrivals();
     }
     
     private static void startGame() {
@@ -69,7 +155,6 @@ public class FroggerGamer {
         frogX = WIDTH / 2;
         frogY = HEIGHT - 1;
         running = true;
-        lives = 3;
         obstacles = new Obstacle[5];
         for (int i = 0; i < obstacles.length; i++) {
             obstacles[i] = new Obstacle(i * 4, HEIGHT / 2 - 2); 
@@ -106,7 +191,7 @@ public class FroggerGamer {
         frogX = WIDTH / 2;
         frogY = HEIGHT - 1;
         running = true;
-        lives = 3;
+        nbVieActuel = LIVES_MAX;
 
         
         Arrivals.setTotalArrivals(2); 
@@ -122,7 +207,7 @@ public class FroggerGamer {
     private static void render() {
         clearScreen();
         
-        System.out.println("Vies restantes : " + lives);
+        System.out.println("Vies restantes : " + nbVieActuel);
         for (int y = 0; y < HEIGHT; y++) {
             for (int x = 0; x < WIDTH; x++) {
                 if (Arrivals.isWPosition(x, y)) {
@@ -184,13 +269,13 @@ public class FroggerGamer {
 
     private static synchronized void checkCollision() {
         if (isObstacleAt(frogX, frogY)) {
-            lives--;
+            nbVieActuel--;
             paused = true;
             clearScreen();
-            System.out.println("💀 Un obstacle vous a écrasé ! Il vous reste " + lives + " vies. 💀");
+            System.out.println("💀 Un obstacle vous a écrasé ! Il vous reste " + nbVieActuel + " vies. 💀");
             pause(1000); 
             paused = false; 
-            if (lives <= 0) {
+            if (nbVieActuel <= 0) {
                 AfficherGameOver();
                 askReplay();
                 return;
@@ -240,7 +325,7 @@ public class FroggerGamer {
         System.out.print("Voulez-vous rejouer ? (y/n) : ");
         char choice = Lire.c();
         if (choice == 'y') {
-            resetGame();
+            choix();
         } else {
             exitGame();
         }
@@ -254,8 +339,9 @@ public class FroggerGamer {
         }
     }
     private static void exitGame() {
-        System.out.println("\033[0m\033c"); 
-        System.exit(0); 
+        running = false;
+        clearScreen();
+        choix();
     }
     
     private static void clearScreen() {

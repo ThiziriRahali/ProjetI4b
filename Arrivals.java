@@ -15,6 +15,10 @@ public class Arrivals {
         return wPositions.size() >= totalArrivals;
     }
 
+    public static int getNbArrives(){
+        return totalArrivals;
+    } 
+
     public static void setTotalArrivals(int total) {
         totalArrivals = total;
     }
