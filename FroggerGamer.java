@@ -115,7 +115,7 @@ public class FroggerGamer {
     
     private static void update(char move) {
         switch (move) {
-            case 'z': if (frogY > 0) frogY--; break;
+            case 'z': if (frogY > 1 ^ (frogY == 1 && frogX%5==0)) frogY--; break;
             case 's': if (frogY < HEIGHT - 1) frogY++; break;
             case 'q': if (frogX > 0) frogX--; break;
             case 'd': if (frogX < WIDTH - 1) frogX++; break;
