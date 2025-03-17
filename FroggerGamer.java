@@ -56,7 +56,6 @@ public class FroggerGamer {
     public static void main(String[] args) {
         startGame();
     }
-    /////////////////////rgp ierhgyuzegfuygfg
     
     private static void startGame() {
         FROGACT = FROG_CHAR;
@@ -66,7 +65,7 @@ public class FroggerGamer {
         lives = 3;
         obstacles = new Obstacle[5];
         for (int i = 0; i < obstacles.length; i++) {
-            obstacles[i] = new Obstacle(i * 4, HEIGHT / 2 - 2); // Éviter le terre-plein
+            obstacles[i] = new Obstacle(i * 4, HEIGHT / 2 - 2);
             obstacles[i].start();
         }
         
@@ -80,8 +79,6 @@ public class FroggerGamer {
 
     }
 
-    /////////////////:z ofgzuryfg zf spdfgerg er2g er g0
-    
     private static void render() {
         clearScreen();
         
