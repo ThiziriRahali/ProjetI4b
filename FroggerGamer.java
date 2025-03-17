@@ -1,6 +1,7 @@
 import java.util.Random;
-
+ // Ceci est un test
 class Obstacle extends Thread {
+    private boolean isTest = False;
     private int x;
     private int y;
     private boolean active = true;
