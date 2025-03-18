@@ -1,5 +1,3 @@
-import java.util.*;
-
 public class FroggerGamer {
     public static final String FINISH_LINE_CHAR = "🏁";
     public static final String WALL_CHAR = "🧱";
@@ -109,6 +107,8 @@ public class FroggerGamer {
 
     public static void miseValeur(){
         nbVieActuel = LIVES_MAX;
+        Arrivals.setTotalArrivals(2); 
+        Arrivals.ClearwPositions();
         startGame();
     }
     
@@ -124,6 +124,7 @@ public class FroggerGamer {
             obstacles[i] = new Obstacle(i * 4, HEIGHT / 2 - 2); 
             obstacles[i].start();
         }
+      
         
         Thread renderThread = new Thread(() -> {
             while (running) {
@@ -150,23 +151,23 @@ public class FroggerGamer {
         System.out.println("Merci d'avoir joué !");
 
     }
-    private static void resetGame() {
-        FROGACT = FROG_CHAR;
-        frogX = WIDTH / 2;
-        frogY = HEIGHT - 1;
-        running = true;
-        nbVieActuel = LIVES_MAX;
+    // private static void resetGame() {
+    //     FROGACT = FROG_CHAR;
+    //     frogX = WIDTH / 2;
+    //     frogY = HEIGHT - 1;
+    //     running = true;
+    //     nbVieActuel = LIVES_MAX;
 
         
-        Arrivals.setTotalArrivals(2); 
-        Arrivals.ClearwPositions();
+    //     Arrivals.setTotalArrivals(2); 
+    //     Arrivals.ClearwPositions();
 
-        obstacles = new Obstacle[5];
-        for (int i = 0; i < obstacles.length; i++) {
-            obstacles[i] = new Obstacle(i * 4, HEIGHT / 2 - 2); 
-            obstacles[i].start();  
-        }
-    }
+    //     obstacles = new Obstacle[5];
+    //     for (int i = 0; i < obstacles.length; i++) {
+    //         obstacles[i] = new Obstacle(i * 4, HEIGHT / 2 - 2); 
+    //         obstacles[i].start();  
+    //     }
+    // }
     
     private static void render() {
         clearScreen();
@@ -237,7 +238,7 @@ public class FroggerGamer {
             paused = true;
             clearScreen();
             System.out.println("💀 Un obstacle vous a écrasé ! Il vous reste " + nbVieActuel + " vies. 💀");
-            pause(1000); 
+            pause(1500); 
             paused = false; 
             if (nbVieActuel <= 0) {
                 AfficherGameOver();

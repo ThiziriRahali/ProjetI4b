@@ -1,4 +1,6 @@
-public class Obstacle extends Thread {
+import java.util.*;
+
+class Obstacle extends Thread {
     private int x;
     private int y;
     private boolean active = true;
@@ -28,8 +30,17 @@ public class Obstacle extends Thread {
         x = (x + 1) % WIDTH;
     }
     
+    public void stopObstacle() {
+        active = false;
+        interrupt(); 
+    }
+    public void restartObstacle() {
+        if (!active) {
+             active = true;
+             start();  // Redémarre le thread
+        }}
+
     public int getX() { return x; }
     public int getY() { return y; }
     public String getChar() { return OBSTACLE_CHAR; }
 }
-
