@@ -1,3 +1,4 @@
+
 import java.util.*;
 public class Arrivals {
     private static int totalArrivals = 2; // Nombre total de places à remplir
