@@ -69,7 +69,7 @@ public class FroggerGamer {
         }
         
         public void sendMessage(String message) {
-            f.println(message);
+            output.println(message);
         }
         
         public void requestInput(String prompt) {
@@ -92,10 +92,7 @@ public class FroggerGamer {
                         break;
                     } else if (player.isPlaying) {
                         // Traiter les commandes de déplacement
-                        if (message.length() == 1) {
-                            char move = message.charAt(0);
-                            updatePlayer(player, move);
-                        } else {
+                        
                             // Traiter les choix de menu
                             try {
                                 int choice = Integer.parseInt(message);
@@ -103,7 +100,7 @@ public class FroggerGamer {
                             } catch (NumberFormatException e) {
                                 sendMessage("Entrée invalide, veuillez réessayer.");
                             }
-                        }
+                        
                     }
                 }
             } catch (IOException e) {

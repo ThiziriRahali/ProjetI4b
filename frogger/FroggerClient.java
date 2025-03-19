@@ -35,6 +35,8 @@ public class FroggerClient {
                         // Si c'est une commande de déplacement, ne pas l'afficher
                         else if (message.equals("MOVE")) {
                             System.out.print("Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer : ");
+                            String choiceMov = scanner.nextLine();
+                            output.println (choiceMov);
                         }
                         // Sinon afficher le message (tableau de jeu, etc.)
                         else {
