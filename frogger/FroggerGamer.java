@@ -1,3 +1,6 @@
+import java.io.*;
+import java.net.*;
+
 public class FroggerGamer {
     public static final String FINISH_LINE_CHAR = "🏁";
     public static final String WALL_CHAR = "🧱";
@@ -10,19 +13,49 @@ public class FroggerGamer {
     private static final String FROG_WIN = "🤴";
     private static int frogX;
     private static int frogY;
-    private static boolean running;
+    private static volatile  boolean running;
     private static Obstacle[] obstacles;
     private static int LIVES_MAX = 3;
     public static int nbVieActuel;
     private static final String MESSAGE = "Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer : ";    
-    private static boolean paused =false;
-    private static boolean gagne = false;
+    private static volatile boolean paused =false;
+    private static volatile boolean gagne = false;
     public static Arrivals A = new Arrivals();
     private static final int DIFFICULTE = 500; 
 
     public static void main(String[] args) {
-        choix();
-    }
+        
+         try {
+                ServerSocket serverSocket = new ServerSocket(12345);
+                System.out.println("Serveur démarré, en attente de connexion...");
+    
+                Socket socket = serverSocket.accept();
+                System.out.println("Grenouille connecté !");
+                choix();
+    
+                
+                BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
+    
+               
+                String message;
+                while ((message = input.readLine()) != null) {
+                    
+                    
+                    // Répondre au client
+                    output.println("Serveur reçu: " + message);
+                    choix();
+                }
+    
+               
+                socket.close();
+                serverSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            
+        }
+    
 
     public static void choix() {
         boolean quitter = false;
@@ -124,13 +157,15 @@ public class FroggerGamer {
             obstacles[i] = new Obstacle(i * 4, HEIGHT / 2 - 2); 
             obstacles[i].start();
         }
-      
+    
         
         Thread renderThread = new Thread(() -> {
             while (running) {
                 if (!paused && !gagne) {
+
                     render();
-                    checkCollision(); // Vérifier si un obstacle passe sur la grenouille
+
+                    checkCollision(); // Vérifier si obstacle passe sur  grenouille
                     System.out.print(MESSAGE);
                 }
                 try {
@@ -168,7 +203,15 @@ public class FroggerGamer {
     //         obstacles[i].start();  
     //     }
     // }
-    
+    private static void stopAllObstacles() {
+        if (obstacles != null) {
+            for (Obstacle obs : obstacles) {
+                if (obs != null) {
+                    obs.stopObstacle();
+                }
+            }
+        }
+    }
     private static void render() {
         clearScreen();
         
@@ -220,31 +263,33 @@ public class FroggerGamer {
             gagne = true;
             System.out.println("🎉 Félicitations ! Un prince est apparu à cette place !");
             continuePlay();
-            pause(1000);
         
-            if (Arrivals.GlobalWin()) {
-                System.out.println("🏆 TOUS les emplacements sont remplis ! VOUS AVEZ GAGNÉ ! 🏆");
-                pause(1000);
-                askReplay(); // Demander si on veut rejouer
-                return;
-            }
+            // if (Arrivals.GlobalWin()) {
+            //     System.out.println("🏆 TOUS les emplacements sont remplis ! VOUS AVEZ GAGNÉ ! 🏆");
+            //     pause(1000);
+            //     askReplay(); // Demander si on veut rejouer
+            //     return;
+            // }
         }
         checkCollision();
     }
 
-    private static synchronized void checkCollision() {
+    private static void checkCollision() {
+
         if (isObstacleAt(frogX, frogY)) {
             nbVieActuel--;
             paused = true;
             clearScreen();
             System.out.println("💀 Un obstacle vous a écrasé ! Il vous reste " + nbVieActuel + " vies. 💀");
-            pause(1500); 
-            paused = false; 
+            pause(1000); 
+            
             if (nbVieActuel <= 0) {
                 AfficherGameOver();
-                askReplay();
-                return;
+                
+                continuePlay();
+                return;            
             }
+            paused = false; 
             resetFrog();
         }
     }
@@ -272,9 +317,16 @@ public class FroggerGamer {
         frogY = HEIGHT - 1;
     }
     private static void continuePlay(){
+        pause(3000); 
         if ( Arrivals.GlobalWin() )
         {
             System.out.println("Vous avez gagné, Génial!!");
+            askReplay();
+
+        }
+        else if (nbVieActuel <=0 )
+        {
+           
             askReplay();
 
         }
@@ -288,22 +340,30 @@ public class FroggerGamer {
     
     private static void askReplay() {
         System.out.print("Voulez-vous rejouer ? (y/n) : ");
-        char choice = Lire.c();
-        if (choice == 'y') {
-            choix();
-        } else {
-            exitGame();
+        char choix = Lire.c();
+        switch (choix) {
+            case 'y':
+                choix();
+                break;
+            case 'n':
+                exitGame();
+                break;
+           
+            default:
+                System.out.println("Choix invalide. Veuillez réessayer.");
         }
+
     }
     
     private static void pause(int ms) {
         try {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+           
         }
     }
     private static void exitGame() {
+        stopAllObstacles();  // Arrêter tous les threads d'obstacles
         running = false;
         clearScreen();
         choix();
@@ -313,5 +373,5 @@ public class FroggerGamer {
         System.out.print("\033[H\033[2J");
         System.out.flush();
     }
-    
 }
+    

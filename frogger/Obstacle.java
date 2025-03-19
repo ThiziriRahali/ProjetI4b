@@ -21,7 +21,7 @@ class Obstacle extends Thread {
                 Thread.sleep(rand.nextInt(1000) + 500);
                 moveObstacle();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                
             }
         }
     }
