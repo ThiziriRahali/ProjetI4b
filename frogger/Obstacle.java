@@ -1,3 +1,4 @@
+// Modifiez la classe Obstacle dans Obstacle.java pour ajouter une vérification de collision après chaque mouvement
 
 import java.util.*;
 
@@ -21,8 +22,11 @@ class Obstacle extends Thread {
             try {
                 Thread.sleep(rand.nextInt(1000) + 500);
                 moveObstacle();
-            } catch (InterruptedException e) {
                 
+                
+                FroggerGamer.checkAllPlayersCollisions();
+            } catch (InterruptedException e) {
+                // Interruption gérée
             }
         }
     }
@@ -35,11 +39,13 @@ class Obstacle extends Thread {
         active = false;
         interrupt(); 
     }
+    
     public void restartObstacle() {
         if (!active) {
              active = true;
              start();  // Redémarre le thread
-        }}
+        }
+    }
 
     public int getX() { return x; }
     public int getY() { return y; }

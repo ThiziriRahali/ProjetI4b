@@ -12,15 +12,14 @@ public class FroggerClient {
 
     public static void main(String[] args) {
         try {
-            // Se connecter au serveur à l'adresse localhost sur le port 12345
             socket = new Socket("localhost", 12345);
             System.out.println("Connecté au serveur Frogger !");
 
-            // Créer des flux pour envoyer et recevoir des données
+            // flux pour envoyer et recevoir des données
             input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             output = new PrintWriter(socket.getOutputStream(), true);
 
-            // Envoyer une commande pour rejoindre le jeu
+            // commande pour rejoindre le jeu
             output.println("JOIN");
 
             // Thread pour recevoir les messages du serveur (tableau de jeu, etc.)
@@ -31,14 +30,19 @@ public class FroggerClient {
                         // Si le message est une demande de saisie, ne pas l'afficher
                         if (message.startsWith("INPUT:")) {
                             String prompt = message.substring(6);
-                            System.out.print(prompt);
+                            System.out.println(prompt);
                         } 
                         // Si c'est une commande de déplacement, ne pas l'afficher
                         else if (message.equals("MOVE")) {
-                            System.out.print("Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer : ");
-                            // Don't read input here, it will be read in the main thread
+                            System.out.println("Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer : ");
+                            output.println("BOUGE");
+                            
                         }
-                        // Sinon afficher le message (tableau de jeu, etc.)
+                        else if (message.equals("EYO")) {
+                            output.println("JOIN");
+                            
+                        }
+                       
                         else {
                             System.out.println(message);
                         }
@@ -52,7 +56,6 @@ public class FroggerClient {
             receiveThread.setDaemon(true); // Make it a daemon thread so it doesn't prevent program exit
             receiveThread.start();
 
-            // Lire les entrées du joueur et les envoyer au serveur
             String userInput;
             while (running.get() && (userInput = scanner.nextLine()) != null) {
                 output.println(userInput);
