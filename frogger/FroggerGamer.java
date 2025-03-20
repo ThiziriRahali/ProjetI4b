@@ -20,6 +20,9 @@ public class FroggerGamer {
     public static Arrivals A = new Arrivals();
     private static final int DIFFICULTE = 500; 
     private static volatile boolean running= true;
+    private static int idMechant=0;
+    private static Client[][] joueursEquipes$= new Client[2][2];
+    private static int nbObstacles = 10;
     
     // multijoueur
     private static Map<Socket, ClientHandler> clients = new ConcurrentHashMap<>();
@@ -197,7 +200,7 @@ public class FroggerGamer {
                 if (Arrivals.isWPosition(x, y)) {
                     sb.append(FROG_WIN);
                 } else if (y == 0) {
-                    if(x % 5 == 0) {
+                    if(x % 3 == 0) {
                         sb.append(FINISH_LINE_CHAR);
                     } else {
                         sb.append(WALL_CHAR);
@@ -278,7 +281,7 @@ public class FroggerGamer {
     private static void updatePlayer(PlayerInfo player, String move) {
        
         switch (move) {
-            case "z": if (player.frogY > 1 ^ (player.frogY == 1 && player.frogX % 5 == 0)) player.frogY--; break;
+            case "z": if (player.frogY > 1 ^ (player.frogY == 1 && player.frogX % 3 == 0)) player.frogY--; break;
             case "s": if (player.frogY < HEIGHT - 1) player.frogY++; break;
             case "q": if (player.frogX > 0) player.frogX--; break;
             case "d": if (player.frogX < WIDTH - 1) player.frogX++; break;
@@ -287,7 +290,7 @@ public class FroggerGamer {
     
         
         checkCollisionForPlayer(player);
-        if (player.frogY == 0 && player.frogX % 5 == 0) {
+        if (player.frogY == 0 && player.frogX % 3 == 0) {
             Arrivals.addWPosition(player.frogX, player.frogY);
             ClientHandler client = getClientForPlayer(player);
             if (client != null) {
@@ -362,7 +365,7 @@ public class FroggerGamer {
                "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡀⠀⠀⠀⠀⠀⠀⠀⣠⡇⢰⣶⣶⣾⡿⠷⣿⣿⣿⡟⠛⣉⣿⣿⣿⠆\n" +
                "⠀⠀⠀⠀⠀⠀⢀⣤⣶⣿⣿⡎⣿⣿⣦⠀⠀⠀⢀⣤⣾⠟⢀⣿⣿⡟⣁⠀⠀⣸⣿⣿⣤⣾⣿⡿⠛⠁⠀\n" +
                "⠀⠀⠀⠀⣠⣾⣿⡿⠛⠉⢿⣦⠘⣿⣿⡆⠀⢠⣾⣿⠋⠀⣼⣿⣿⣿⠿⠷⢠⣿⣿⣿⠿⢻⣿⣧⠀⠀⠀\n" +
-               "⠀⠀⠀⣴⣿⣿⠋⠀⠀⠀⢸⣿⣇⢹⣿⣷⣰⣿⣿⠃⠀⢠⣿⣿⢃⣀⣤⣤⣾⣿⡟⠀⠀⠀⢻⣿⣆⠀⠀\n" +
+               "⠀⠀⠀⣴⣿⣿⠋⠀⠀⠀⢸⣿⣇⢹⣿n⣷⣰⣿⣿⠃⠀⢠⣿⣿⢃⣀⣤⣤⣾⣿⡟⠀⠀⠀⢻⣿⣆⠀⠀\n" +
                "⠀⠀⠀⣿⣿⡇⠀⠀⢀⣴⣿⣿⡟⠀⣿⣿⣿⣿⠃⠀⠀⣾⣿⣿⡿⠿⠛⢛⣿⡟⠀⠀⠀⠀⠀⠻⠿⠀⠀\n" +
                "⠀⠀⠀⠹⣿⣿⣶⣾⣿⣿⣿⠟⠁⠀⠸⢿⣿⠇⠀⠀⠀⠛⠛⠁⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀\n" +
                "⠀⠀⠀⠀⠈⠙⠛⠛⠛⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀";
@@ -389,7 +392,7 @@ public class FroggerGamer {
             initGame();
             
             // Démarrer le serveur
-            ServerSocket serverSocket = new ServerSocket(12345);
+            ServerSocket serverSocket = new ServerSocket(12345, 50, InetAddress.getByName("0.0.0.0"));
             System.out.println("Serveur démarré, en attente de connexions...");
             
             while (true) {
@@ -411,9 +414,7 @@ public class FroggerGamer {
     }
     
     private static void initGame() {
-        
-        
-        obstacles = new Obstacle[5];
+        obstacles = new Obstacle[this.nbObstacles];
         for (int i = 0; i < obstacles.length; i++) {
             obstacles[i] = new Obstacle(i * 4, HEIGHT / 2 - 2);
             obstacles[i].start();
