@@ -22,7 +22,7 @@ public class FroggerClient {
             // commande pour rejoindre le jeu
             output.println("JOIN");
 
-            // Thread pour recevoir les messages du serveur (tableau de jeu, etc.)
+            //  recevoir messages du serveur (jeu)
             Thread receiveThread = new Thread(() -> {
                 try {
                     String message;

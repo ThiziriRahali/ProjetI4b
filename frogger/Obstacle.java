@@ -26,7 +26,7 @@ class Obstacle extends Thread {
                 
                 FroggerGamer.checkAllPlayersCollisions();
             } catch (InterruptedException e) {
-                // Interruption gérée
+                
             }
         }
     }
@@ -43,7 +43,7 @@ class Obstacle extends Thread {
     public void restartObstacle() {
         if (!active) {
              active = true;
-             start();  // Redémarre le thread
+             start();  
         }
     }
 

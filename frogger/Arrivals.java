@@ -1,7 +1,7 @@
 
 import java.util.*;
 public class Arrivals {
-    private static int totalArrivals = 4; // Nombre total de places à remplir
+    private static int totalArrivals = 3; // Nombre total de places à remplir
     private static ArrayList<int[]> wPositions = new ArrayList<>();
 
     public static void addWPosition(int x, int y) {

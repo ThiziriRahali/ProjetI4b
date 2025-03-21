@@ -20,9 +20,6 @@ public class FroggerGamer {
     public static Arrivals A = new Arrivals();
     private static final int DIFFICULTE = 500; 
     private static volatile boolean running= true;
-    private static int idMechant=0;
-    private static Client[][] joueursEquipes$= new Client[2][2];
-    private static int nbObstacles = 10;
     
     // multijoueur
     private static Map<Socket, ClientHandler> clients = new ConcurrentHashMap<>();
@@ -37,6 +34,7 @@ public class FroggerGamer {
         int lives;
         String frogChar;
         boolean isPlaying;
+        int compteur;
         
         public PlayerInfo(int id) {
             this.id = id;
@@ -122,6 +120,12 @@ public class FroggerGamer {
         }
     }
     
+    private static void sendAllMessage(String message) {
+        for (ClientHandler client : clients.values()) {
+            client.sendMessage(message);
+        }
+    }
+
     private static void removeClient(Socket socket) {
         clients.remove(socket);
         players.remove(socket);
@@ -177,12 +181,9 @@ public class FroggerGamer {
             Thread gameThread = new Thread(() -> {
                 while (player.isPlaying && running) {
                     renderForClient(client, player);
+                    client.sendMessage("     ");
                     client.requestMove();
-                    try {
-                        Thread.sleep(DIFFICULTE);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    pause(10);
                 }
             });
             gameThread.start();
@@ -200,7 +201,7 @@ public class FroggerGamer {
                 if (Arrivals.isWPosition(x, y)) {
                     sb.append(FROG_WIN);
                 } else if (y == 0) {
-                    if(x % 3 == 0) {
+                    if(x % 4 == 0) {
                         sb.append(FINISH_LINE_CHAR);
                     } else {
                         sb.append(WALL_CHAR);
@@ -259,10 +260,11 @@ public class FroggerGamer {
             
             if (player.lives <= 0) {
                 if (client != null) {
-                    running=false;
+                    
                     client.sendMessage(GameOver());
                     client.sendMessage("Game Over ! Vous avez perdu toutes vos vies.");
                     askreplay(client);
+                    running=false;
 
                     return;
                 }
@@ -274,6 +276,7 @@ public class FroggerGamer {
 
     private static void askreplay(ClientHandler client){
         client.requestInput("Voulez-vous rejouer ? (y/n) : ");
+        Arrivals.ClearwPositions();
     }
     
   
@@ -281,7 +284,7 @@ public class FroggerGamer {
     private static void updatePlayer(PlayerInfo player, String move) {
        
         switch (move) {
-            case "z": if (player.frogY > 1 ^ (player.frogY == 1 && player.frogX % 3 == 0)) player.frogY--; break;
+            case "z": if (player.frogY > 1 ^ (player.frogY == 1 && player.frogX % 4 == 0)) player.frogY--; break;
             case "s": if (player.frogY < HEIGHT - 1) player.frogY++; break;
             case "q": if (player.frogX > 0) player.frogX--; break;
             case "d": if (player.frogX < WIDTH - 1) player.frogX++; break;
@@ -290,24 +293,38 @@ public class FroggerGamer {
     
         
         checkCollisionForPlayer(player);
-        if (player.frogY == 0 && player.frogX % 3 == 0) {
+        if (player.frogY == 0 && player.frogX % 4 == 0) {
             Arrivals.addWPosition(player.frogX, player.frogY);
             ClientHandler client = getClientForPlayer(player);
             if (client != null) {
-                client.sendMessage("🎉 Félicitations ! Un prince est apparu à cette place !");
+                player.compteur++;
+                sendAllMessage("🎉 Félicitations ! Un prince est apparu !");
                 resetFrog(player);
             }
             
             
             if (Arrivals.GlobalWin()) {
-                
-                client.sendMessage("\033[H\033[2J");
+                System.out.println("DEBUG: Victoire détectée !");
+                sendAllMessage("\033[H\033[2J");
                 System.out.flush();
-                running=false;
-                client.sendMessage(goodJob());
-                client.sendMessage("🏆 TOUS les emplacements sont remplis ! LE JEU EST TERMINÉ ! 🏆");
-                askreplay(client);
+                running = false;
+                sendAllMessage(goodJob());
+                sendAllMessage("🏆 TOUS les emplacements sont remplis ! LE JEU EST TERMINÉ ! 🏆");
+                PlayerInfo W = null;
+                int gagnant = -1;
                 
+                for (PlayerInfo p : players.values()) {
+                    if (p.compteur > gagnant) {
+                        gagnant = p.compteur;
+                        W = p;
+                    }
+                }
+                
+                // Announce the winner
+                if (W!= null) {
+                    sendAllMessage("🎖️ Le joueur " + W.id + " remporte la partie avec " + W.compteur + " arrivées ! 🎖️");
+                }
+                askreplay(client);
             }
         }
     }
@@ -365,26 +382,21 @@ public class FroggerGamer {
                "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡀⠀⠀⠀⠀⠀⠀⠀⣠⡇⢰⣶⣶⣾⡿⠷⣿⣿⣿⡟⠛⣉⣿⣿⣿⠆\n" +
                "⠀⠀⠀⠀⠀⠀⢀⣤⣶⣿⣿⡎⣿⣿⣦⠀⠀⠀⢀⣤⣾⠟⢀⣿⣿⡟⣁⠀⠀⣸⣿⣿⣤⣾⣿⡿⠛⠁⠀\n" +
                "⠀⠀⠀⠀⣠⣾⣿⡿⠛⠉⢿⣦⠘⣿⣿⡆⠀⢠⣾⣿⠋⠀⣼⣿⣿⣿⠿⠷⢠⣿⣿⣿⠿⢻⣿⣧⠀⠀⠀\n" +
-               "⠀⠀⠀⣴⣿⣿⠋⠀⠀⠀⢸⣿⣇⢹⣿n⣷⣰⣿⣿⠃⠀⢠⣿⣿⢃⣀⣤⣤⣾⣿⡟⠀⠀⠀⢻⣿⣆⠀⠀\n" +
+               "⠀⠀⠀⣴⣿⣿⠋⠀⠀⠀⢸⣿⣇⢹⣿⣷⣰⣿⣿⠃⠀⢠⣿⣿⢃⣀⣤⣤⣾⣿⡟⠀⠀⠀⢻⣿⣆⠀⠀\n" +
                "⠀⠀⠀⣿⣿⡇⠀⠀⢀⣴⣿⣿⡟⠀⣿⣿⣿⣿⠃⠀⠀⣾⣿⣿⡿⠿⠛⢛⣿⡟⠀⠀⠀⠀⠀⠻⠿⠀⠀\n" +
                "⠀⠀⠀⠹⣿⣿⣶⣾⣿⣿⣿⠟⠁⠀⠸⢿⣿⠇⠀⠀⠀⠛⠛⠁⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀\n" +
                "⠀⠀⠀⠀⠈⠙⠛⠛⠛⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀";
     }
     
-    private static void broadcastToAll(String message) {
-        for (ClientHandler client : clients.values()) {
-            client.sendMessage(message);
-        }
-    }
-    
-    private static void resetGame() {
-        Arrivals.ClearwPositions();
-        for (PlayerInfo player : players.values()) {
-            player.frogX = WIDTH / 2;
-            player.frogY = HEIGHT - 1;
-        }
-        initGame();
-    }
+    // private static void resetGame() {
+    //     Arrivals.ClearwPositions();
+
+    //     for (PlayerInfo player : players.values()) {
+    //         player.frogX = WIDTH / 2;
+    //         player.frogY = HEIGHT - 1;
+    //     }
+    //     initGame();
+    // }
     
     public static void main(String[] args) {
         try {
@@ -392,7 +404,7 @@ public class FroggerGamer {
             initGame();
             
             // Démarrer le serveur
-            ServerSocket serverSocket = new ServerSocket(12345, 50, InetAddress.getByName("0.0.0.0"));
+            ServerSocket serverSocket = new ServerSocket(12345);
             System.out.println("Serveur démarré, en attente de connexions...");
             
             while (true) {
@@ -414,10 +426,13 @@ public class FroggerGamer {
     }
     
     private static void initGame() {
-        obstacles = new Obstacle[this.nbObstacles];
+        
+        
+        obstacles = new Obstacle[5];
         for (int i = 0; i < obstacles.length; i++) {
             obstacles[i] = new Obstacle(i * 4, HEIGHT / 2 - 2);
             obstacles[i].start();
+
         }
     }
     
