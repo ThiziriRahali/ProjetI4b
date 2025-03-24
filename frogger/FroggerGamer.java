@@ -8,14 +8,15 @@ public class FroggerGamer {
     public static final String WALL_CHAR = "🧱";
     private static final int WIDTH = 10;
     private static final int HEIGHT = 10;
-    private static final String FROG_CHAR = "🐸";
     private static final String FROG_TET = "🦎";
+    private static final String FROG_CHAR = "🐸";
     private static final String FROG_DRAG = "🐲";
     private static final String FROG_PRINCESS = "👸";
     private static String FROGACT = FROG_CHAR;
     private static final String ROAD_CHAR = ".";
     private static final String TERRE_PLEIN_CHAR = "🌱";
     private static final String FROG_WIN = "🤴";
+    private static final String FROG_MEAN = "😡";
     private static Obstacle[] obstacles;
     private static final int LIVES_MAX = 3;
     public static int nbVieActuel;
@@ -36,7 +37,7 @@ public class FroggerGamer {
         int lives;
         String frogChar;
         boolean isPlaying;
-        int cmt ;
+        int cpt ;
         int niveau;
         String rang;
         
@@ -48,6 +49,38 @@ public class FroggerGamer {
             this.frogChar = FROG_TET + id;
             this.isPlaying = true;
             this.niveau=0;
+        }
+
+        public String getEmojiNiveau() {
+            actuEmoji(this)
+            if (niveau > 0 & niveau<=2){
+                return FROG_TET;
+            }
+            else  if (niveau > 2 & niveau <= 6){
+                return FROG_CHAR; 
+            }
+            else  if (niveau > 7 & niveau <= 20){
+                return FROG_DRAG; 
+            }
+            else  if (niveau > 20){
+                return FROG_PRINCESS; 
+            }
+            return FROG_CHAR;
+        }
+
+        public void actuEmoji(PlayerInfo player){
+            if (player.niveau > 0 & player.niveau<=2){
+                player.frogChar = FROG_TET + id;
+            }
+            else  if (player.niveau > 2 & player.niveau <= 6){
+                player.frogChar = FROG_CHAR+id; 
+            }
+            else  if (player.niveau > 7 & player.niveau <= 20){
+                player.frogChar = FROG_DRAG+id; 
+            }
+            else  if (player.niveau > 20){
+                player.frogChar = FROG_PRINCESS+id; 
+            }
         }
     }
     
@@ -176,24 +209,13 @@ public class FroggerGamer {
     private static void startGameForClient(ClientHandler client) {
         running=true;
         PlayerInfo player = players.get(client.socket);
-        player.cmt=0;
+        player.cpt=0;
         if (player != null) {
             player.isPlaying = true;
             player.lives = LIVES_MAX;
             player.frogX = WIDTH / 2;
             player.frogY = HEIGHT - 1;
-            if (player.niveau >  0 & player.niveau<=2){
-                player.frogChar = FROG_TET;
-            }
-            else  if (player.niveau >  2 & player.niveau <= 6){
-                player.frogChar = FROG_CHAR; 
-            }
-            else  if (player.niveau >  7 & player.niveau <= 20){
-                player.frogChar = FROG_DRAG; 
-            }
-            else  if (player.niveau > 20){
-                player.frogChar = FROG_PRINCESS; 
-            }
+            actuEmoji(player);
             
             
             
@@ -316,7 +338,7 @@ public class FroggerGamer {
             Arrivals.addWPosition(player.frogX, player.frogY);
             ClientHandler client = getClientForPlayer(player);
             if (client != null) {
-                player.cmt++;
+                player.cpt++;
                 
                 sendAllMessage("🎉 Félicitations ! Un prince est apparu !");
                 resetFrog(player);
@@ -334,8 +356,8 @@ public class FroggerGamer {
                 int gagnant = -1;
                 
                 for (PlayerInfo p : players.values()) {
-                    if (p.cmt > gagnant) {
-                        gagnant = p.cmt;
+                    if (p.cpt > gagnant) {
+                        gagnant = p.cpt;
                         W = p;
                     }
                 }
@@ -343,9 +365,9 @@ public class FroggerGamer {
                 
                 // Announce the winner
                 if (W!= null) {
-                    sendAllMessage("🎖️ Le joueur " + W.id + " remporte la partie avec " + W.cmt + " arrivées ! 🎖️");
+                    sendAllMessage("🎖️ Le joueur " + W.id + " remporte la partie avec " + W.cpt + " arrivées ! 🎖️");
                 }
-                player.niveau=player.cmt;
+                player.niveau=player.cpt;
                 askreplay(client);
             }
         }
