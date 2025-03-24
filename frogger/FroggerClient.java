@@ -52,7 +52,7 @@ public class FroggerClient {
                     }
                 }
             });
-            receiveThread.setDaemon(true); // Make it a daemon thread so it doesn't prevent program exit
+            //receiveThread.setDaemon(true); // Make it a daemon thread so it doesn't prevent program exit
             receiveThread.start();
 
             String userInput;

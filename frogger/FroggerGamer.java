@@ -12,7 +12,6 @@ public class FroggerGamer {
     private static final String FROG_CHAR = "🐸";
     private static final String FROG_DRAG = "🐲";
     private static final String FROG_PRINCESS = "👸";
-    private static String FROGACT = FROG_CHAR;
     private static final String ROAD_CHAR = ".";
     private static final String TERRE_PLEIN_CHAR = "🌱";
     private static final String FROG_WIN = "🤴";
@@ -52,7 +51,7 @@ public class FroggerGamer {
         }
 
         public String getEmojiNiveau() {
-            actuEmoji(this)
+            actuEmoji(this);
             if (niveau > 0 & niveau<=2){
                 return FROG_TET;
             }
@@ -215,7 +214,7 @@ public class FroggerGamer {
             player.lives = LIVES_MAX;
             player.frogX = WIDTH / 2;
             player.frogY = HEIGHT - 1;
-            actuEmoji(player);
+            player.actuEmoji(client.player);
             
             
             
@@ -248,10 +247,10 @@ public class FroggerGamer {
                         sb.append(WALL_CHAR);
                     }
                 } else if (x == player.frogX && y == player.frogY) {
-                    sb.append(player.frogChar);}
-                // } else if (isPlayerAt(x, y, player)) {
-                //     sb.append("🐸"); // Autre joueur
-                // } 
+                    sb.append(player.getEmojiNiveau());}
+                 else if (isPlayerAt(x, y, player)) {
+                    sb.append("☁️"); // Autre joueur
+                } 
                     else if (y == HEIGHT / 2) {
                     sb.append(TERRE_PLEIN_CHAR);
                 } else if (isObstacleAt(x, y)) {
