@@ -3,7 +3,7 @@ import java.net.*;
 
 public class Client {
     public static void main(String[] args) {
-        try {
+        /*try {
             // Se connecter au serveur à l'adresse localhost sur le port 12345
             Socket socket = new Socket("localhost", 12345);
 
@@ -22,6 +22,17 @@ public class Client {
             socket.close();
         } catch (IOException e) {
             e.printStackTrace();
+        }*/
+        Timer t = new Timer();
+        t.start();
+        while (t.getCompteur() < 10) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("Compteur: " + t.getCompteur());
+            
         }
     }
 }
