@@ -4,12 +4,14 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class FroggerGamer {
-    // Constantes et variables existantes
     public static final String FINISH_LINE_CHAR = "🏁";
     public static final String WALL_CHAR = "🧱";
     private static final int WIDTH = 10;
     private static final int HEIGHT = 10;
     private static final String FROG_CHAR = "🐸";
+    private static final String FROG_TET = "🦎";
+    private static final String FROG_DRAG = "🐲";
+    private static final String FROG_PRINCESS = "👸";
     private static String FROGACT = FROG_CHAR;
     private static final String ROAD_CHAR = ".";
     private static final String TERRE_PLEIN_CHAR = "🌱";
@@ -34,15 +36,18 @@ public class FroggerGamer {
         int lives;
         String frogChar;
         boolean isPlaying;
-        int compteur;
+        int cmt ;
+        int niveau;
+        String rang;
         
         public PlayerInfo(int id) {
             this.id = id;
             this.frogX = WIDTH / 2;
             this.frogY = HEIGHT - 1;
             this.lives = LIVES_MAX;
-            this.frogChar = FROG_CHAR + id;
+            this.frogChar = FROG_TET + id;
             this.isPlaying = true;
+            this.niveau=0;
         }
     }
     
@@ -171,18 +176,32 @@ public class FroggerGamer {
     private static void startGameForClient(ClientHandler client) {
         running=true;
         PlayerInfo player = players.get(client.socket);
+        player.cmt=0;
         if (player != null) {
             player.isPlaying = true;
             player.lives = LIVES_MAX;
             player.frogX = WIDTH / 2;
             player.frogY = HEIGHT - 1;
+            if (player.niveau >  0 & player.niveau<=2){
+                player.frogChar = FROG_TET;
+            }
+            else  if (player.niveau >  2 & player.niveau <= 6){
+                player.frogChar = FROG_CHAR; 
+            }
+            else  if (player.niveau >  7 & player.niveau <= 20){
+                player.frogChar = FROG_DRAG; 
+            }
+            else  if (player.niveau > 20){
+                player.frogChar = FROG_PRINCESS; 
+            }
             
-            // Démarrer le jeu pour ce client
+            
+            
             Thread gameThread = new Thread(() -> {
                 while (player.isPlaying && running) {
                     renderForClient(client, player);
-                    client.sendMessage("     ");
                     client.requestMove();
+                    client.sendMessage("Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer : ");
                     pause(10);
                 }
             });
@@ -207,10 +226,11 @@ public class FroggerGamer {
                         sb.append(WALL_CHAR);
                     }
                 } else if (x == player.frogX && y == player.frogY) {
-                    sb.append(player.frogChar);
-                } else if (isPlayerAt(x, y, player)) {
-                    sb.append("🐸"); // Autre joueur
-                } else if (y == HEIGHT / 2) {
+                    sb.append(player.frogChar);}
+                // } else if (isPlayerAt(x, y, player)) {
+                //     sb.append("🐸"); // Autre joueur
+                // } 
+                    else if (y == HEIGHT / 2) {
                     sb.append(TERRE_PLEIN_CHAR);
                 } else if (isObstacleAt(x, y)) {
                     sb.append(Obstacle.OBSTACLE_CHAR);
@@ -234,7 +254,6 @@ public class FroggerGamer {
     }
 
     public static synchronized void checkAllPlayersCollisions() {
-        // Vérifier les collisions pour tous les joueurs actifs
         for (PlayerInfo player : players.values()) {
             if (player.isPlaying && player.lives > 0) {
                 checkCollisionForPlayer(player);
@@ -263,8 +282,8 @@ public class FroggerGamer {
                     
                     client.sendMessage(GameOver());
                     client.sendMessage("Game Over ! Vous avez perdu toutes vos vies.");
-                    askreplay(client);
                     running=false;
+                    askreplay(client);
 
                     return;
                 }
@@ -297,7 +316,8 @@ public class FroggerGamer {
             Arrivals.addWPosition(player.frogX, player.frogY);
             ClientHandler client = getClientForPlayer(player);
             if (client != null) {
-                player.compteur++;
+                player.cmt++;
+                
                 sendAllMessage("🎉 Félicitations ! Un prince est apparu !");
                 resetFrog(player);
             }
@@ -308,22 +328,24 @@ public class FroggerGamer {
                 sendAllMessage("\033[H\033[2J");
                 System.out.flush();
                 running = false;
-                sendAllMessage(goodJob());
+                
                 sendAllMessage("🏆 TOUS les emplacements sont remplis ! LE JEU EST TERMINÉ ! 🏆");
                 PlayerInfo W = null;
                 int gagnant = -1;
                 
                 for (PlayerInfo p : players.values()) {
-                    if (p.compteur > gagnant) {
-                        gagnant = p.compteur;
+                    if (p.cmt > gagnant) {
+                        gagnant = p.cmt;
                         W = p;
                     }
                 }
+                getClientForPlayer(W).sendMessage(goodJob());
                 
                 // Announce the winner
                 if (W!= null) {
-                    sendAllMessage("🎖️ Le joueur " + W.id + " remporte la partie avec " + W.compteur + " arrivées ! 🎖️");
+                    sendAllMessage("🎖️ Le joueur " + W.id + " remporte la partie avec " + W.cmt + " arrivées ! 🎖️");
                 }
+                player.niveau=player.cmt;
                 askreplay(client);
             }
         }
@@ -411,11 +433,10 @@ public class FroggerGamer {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Nouvelle grenouille connectée !");
                 
-                // Créer un nouveau joueur
                 PlayerInfo player = new PlayerInfo(nextPlayerId++);
                 players.put(clientSocket, player);
                 
-                // Créer et démarrer un gestionnaire de client
+                //  gestion client
                 ClientHandler clientHandler = new ClientHandler(clientSocket, player);
                 clients.put(clientSocket, clientHandler);
                 clientHandler.start();
@@ -435,8 +456,6 @@ public class FroggerGamer {
 
         }
     }
-    
-    // Méthodes existantes
     private static boolean isObstacleAt(int x, int y) {
         for (Obstacle obs : obstacles) {
             if (obs.getX() == x && obs.getY() == y) {
@@ -456,10 +475,6 @@ public class FroggerGamer {
         }
     }
 
-    // private static void clearScreen() {
-    //     client.sendMessage("\033[H\033[2J");
-    //     System.out.flush();
-    // }
 
     private static void pause(int ms) {
         try {

@@ -12,29 +12,29 @@ public class FroggerClient {
 
     public static void main(String[] args) {
         try {
-            socket = new Socket("172.31.18.14", 12345);
+            socket = new Socket("172.31.18.22", 12345);
             System.out.println("Connecté au serveur Frogger !");
 
-            // flux pour envoyer et recevoir des données
+            // flux envoyer et recevoir des données
             input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             output = new PrintWriter(socket.getOutputStream(), true);
 
-            // commande pour rejoindre le jeu
+            // rejoindre jeu
             output.println("JOIN");
 
-            //  recevoir messages du serveur (jeu)
+            //  recevoir messages serveur
             Thread receiveThread = new Thread(() -> {
                 try {
                     String message;
                     while (running.get() && (message = input.readLine()) != null) {
-                        // Si le message est une demande de saisie, ne pas l'afficher
+                        // Si message est demande de saisie, ne pas afficher
                         if (message.startsWith("INPUT:")) {
                             String prompt = message.substring(6);
                             System.out.println(prompt);
                         } 
-                        // Si c'est une commande de déplacement, ne pas l'afficher
+                        
                         else if (message.equals("MOVE")) {
-                            System.out.println("Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer : ");
+                            
                             output.println("BOUGE");
                             
                         }
@@ -66,7 +66,6 @@ public class FroggerClient {
                 }
             }
 
-            // Fermer les ressources
             System.out.println("Fermeture de la connexion...");
             socket.close();
             scanner.close();
