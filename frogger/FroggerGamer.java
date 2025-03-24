@@ -8,14 +8,10 @@ public class FroggerGamer {
     public static final String WALL_CHAR = "🧱";
     private static final int WIDTH = 10;
     private static final int HEIGHT = 10;
-    private static final String FROG_TET = "🦎";
-    private static final String FROG_CHAR = "🐸";
-    private static final String FROG_DRAG = "🐲";
-    private static final String FROG_PRINCESS = "👸";
     private static final String ROAD_CHAR = ".";
     private static final String TERRE_PLEIN_CHAR = "🌱";
     private static final String FROG_WIN = "🤴";
-    private static final String FROG_MEAN = "😡";
+
     private static Obstacle[] obstacles;
     private static final int LIVES_MAX = 3;
     public static int nbVieActuel;
@@ -29,47 +25,7 @@ public class FroggerGamer {
     private static int nextPlayerId = 1;
     
 
-    static class PlayerInfo {
-        int id;
-        int frogX;
-        int frogY;
-        int lives;
-        String frogChar;
-        boolean isPlaying;
-        int cpt ;
-        int niveau;
-        String rang;
-        
-        public PlayerInfo(int id) {
-            this.id = id;
-            this.frogX = WIDTH / 2;
-            this.frogY = HEIGHT - 1;
-            this.lives = LIVES_MAX;
-            this.frogChar = FROG_TET + id;
-            this.isPlaying = true;
-            this.niveau=0;
-        }
-
-        public String getEmojiNiveau() {
-            actuEmoji(this);
-            return frogChar;
-        }
-
-        public void actuEmoji(PlayerInfo player){
-            if (player.niveau > 0 & player.niveau<=2){
-                player.frogChar = FROG_TET + id;
-            }
-            else  if (player.niveau > 2 & player.niveau <= 5){
-                player.frogChar = FROG_CHAR+id; 
-            }
-            else  if (player.niveau > 5 & player.niveau <= 8){
-                player.frogChar = FROG_DRAG+id; 
-            }
-            else  if (player.niveau > 8){
-                player.frogChar = FROG_PRINCESS+id; 
-            }
-        }
-    }
+    
     
     //  client connecté
     static class ClientHandler extends Thread {
@@ -465,6 +421,26 @@ public class FroggerGamer {
 
         }
     }
+    private static void choisirJoueurMechant() {
+        if (players.size() < 2) {
+            sendAllMessage("En attente d'au moins 2 joueurs pour choisir un méchant...");
+            return;
+        }
+    
+        List<PlayerInfo> joueurs = new ArrayList<>(players.values());
+        Random random = new Random();
+        PlayerInfo mechant = joueurs.get(random.nextInt(joueurs.size()));
+    
+        mechant.isCarnivore = true; 
+        ClientHandler clientMechant = getClientForPlayer(mechant);
+    
+        if (clientMechant != null) {
+            clientMechant.sendMessage("😈 Vous avez été choisi comme le joueur méchant !");
+        }
+        
+        sendAllMessage("Un joueur méchant a été désigné ! Faites attention !");
+    }
+    
     private static boolean isObstacleAt(int x, int y) {
         for (Obstacle obs : obstacles) {
             if (obs.getX() == x && obs.getY() == y) {
