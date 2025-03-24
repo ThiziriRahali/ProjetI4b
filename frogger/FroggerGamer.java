@@ -52,19 +52,7 @@ public class FroggerGamer {
 
         public String getEmojiNiveau() {
             actuEmoji(this);
-            if (niveau > 0 & niveau<=2){
-                return FROG_TET;
-            }
-            else  if (niveau > 2 & niveau <= 6){
-                return FROG_CHAR; 
-            }
-            else  if (niveau > 7 & niveau <= 20){
-                return FROG_DRAG; 
-            }
-            else  if (niveau > 20){
-                return FROG_PRINCESS; 
-            }
-            return FROG_CHAR;
+            return frogChar;
         }
 
         public void actuEmoji(PlayerInfo player){

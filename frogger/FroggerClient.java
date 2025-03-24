@@ -12,7 +12,7 @@ public class FroggerClient {
 
     public static void main(String[] args) {
         try {
-            socket = new Socket("172.31.18.22", 12345);
+            socket = new Socket("172.31.18.21", 12345);
             System.out.println("Connecté au serveur Frogger !");
 
             // flux envoyer et recevoir des données
