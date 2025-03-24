@@ -59,13 +59,13 @@ public class FroggerGamer {
             if (player.niveau > 0 & player.niveau<=2){
                 player.frogChar = FROG_TET + id;
             }
-            else  if (player.niveau > 2 & player.niveau <= 6){
+            else  if (player.niveau > 2 & player.niveau <= 5){
                 player.frogChar = FROG_CHAR+id; 
             }
-            else  if (player.niveau > 7 & player.niveau <= 20){
+            else  if (player.niveau > 5 & player.niveau <= 8){
                 player.frogChar = FROG_DRAG+id; 
             }
-            else  if (player.niveau > 20){
+            else  if (player.niveau > 8){
                 player.frogChar = FROG_PRINCESS+id; 
             }
         }
@@ -354,7 +354,7 @@ public class FroggerGamer {
                 if (W!= null) {
                     sendAllMessage("🎖️ Le joueur " + W.id + " remporte la partie avec " + W.cpt + " arrivées ! 🎖️");
                 }
-                player.niveau=player.cpt;
+                player.niveau+=player.cpt;
                 askreplay(client);
             }
         }
