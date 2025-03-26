@@ -7,6 +7,8 @@
     private static final int LIVES_MAX = 3;
     private static final String FROG_PRINCESS = "👸";
     private static final String FROG_MEAN = "😈";
+
+    public boolean running= true;
     int id;
     int frogX;
     int frogY;

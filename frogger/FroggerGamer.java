@@ -11,13 +11,17 @@ public class FroggerGamer {
     private static final String ROAD_CHAR = ".";
     private static final String TERRE_PLEIN_CHAR = "🌱";
     private static final String FROG_WIN = "🤴";
+    private static volatile int currentPlayers = 0; 
+    private static int NbrPlayer =3; 
+    private static volatile boolean waitingForPlayers = true; 
+
 
     private static Obstacle[] obstacles;
     private static final int LIVES_MAX = 3;
     public static int nbVieActuel;
     public static Arrivals A = new Arrivals();
     private static final int DIFFICULTE = 500; 
-    private static volatile boolean running= true;
+    private static volatile boolean PartieStarted;
     
     // multijoueur
     private static Map<Socket, ClientHandler> clients = new ConcurrentHashMap<>();
@@ -33,7 +37,7 @@ public class FroggerGamer {
         private BufferedReader input;
         private PrintWriter output;
         private PlayerInfo player;
-        
+
         public ClientHandler(Socket socket, PlayerInfo player) {
             this.socket = socket;
             this.player = player;
@@ -63,8 +67,7 @@ public class FroggerGamer {
                 String message;
                 while ((message = input.readLine()) != null) {
                     if (message.equals("JOIN")) {
-                        // Envoyer menu au client
-                        afficherMenuPrincipalClient(this);
+                        Welcome(this);
                     } else if (message.equals("QUIT")) {
                         break;
                     } else if (player.isPlaying) {
@@ -118,9 +121,18 @@ public class FroggerGamer {
                 startGameForClient(client);
                 break;
             case 2:
-                client.sendMessage("Mode multijoueur déjà activé !");
-                afficherMenuPrincipalClient(client);
-                break;
+                client.requestInput("Insérez le nombre de joueurs"); 
+                try {
+
+                    NbrPlayer= Integer.parseInt(client. input.readLine());
+                    
+                    startWaitingThread();
+                    
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                
+                break; 
             case 3:
                 parametrerJeuClient(client);
                 break;
@@ -133,6 +145,26 @@ public class FroggerGamer {
         }
     }
     
+    private static void startWaitingThread() {
+        new Thread(() -> {
+            while (!PartieStarted) {
+                int remainingPlayers = NbrPlayer - players.size();
+                if (remainingPlayers > 0) {
+                    sendAllMessage(" \n Veuillez patienter, il reste " + remainingPlayers + " joueur(s) avant de lancer la partie.");
+                } else {
+                    sendAllMessage("Tous les joueurs sont connectés. La partie commence maintenant !");
+                    startGameForAllClients();
+                    break;
+                }
+                try {
+                    Thread.sleep(5000);  
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
     private static void afficherMenuPrincipalClient(ClientHandler client) {
         client.sendMessage("\n=== Menu Principal ===");
         client.sendMessage("1. Mode Solo");
@@ -150,7 +182,9 @@ public class FroggerGamer {
     }
     
     private static void startGameForClient(ClientHandler client) {
-        running=true;
+        
+        PartieStarted=true;
+        client.player.running=true;
         PlayerInfo player = players.get(client.socket);
         player.cpt=0;
         if (player != null) {
@@ -163,7 +197,7 @@ public class FroggerGamer {
             
             
             Thread gameThread = new Thread(() -> {
-                while (player.isPlaying && running) {
+                while (player.isPlaying && player.running) {
                     renderForClient(client, player);
                     client.requestMove();
                     client.sendMessage("Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer : ");
@@ -247,7 +281,8 @@ public class FroggerGamer {
                     
                     client.sendMessage(GameOver());
                     client.sendMessage("Game Over ! Vous avez perdu toutes vos vies.");
-                    running=false;
+                    
+                    player.running=false;
                     askreplay(client);
 
                     return;
@@ -268,11 +303,25 @@ public class FroggerGamer {
     private static void updatePlayer(PlayerInfo player, String move) {
        
         switch (move) {
-            case "z": if (player.frogY > 1 ^ (player.frogY == 1 && player.frogX % 4 == 0)) player.frogY--; break;
-            case "s": if (player.frogY < HEIGHT - 1) player.frogY++; break;
-            case "q": if (player.frogX > 0) player.frogX--; break;
-            case "d": if (player.frogX < WIDTH - 1) player.frogX++; break;
-            case "x": player.isPlaying = false; break;
+            case "z": 
+                if (player.frogY > 1 || (player.frogY == 1 && player.frogX % 4 == 0))
+                    player.frogY--;
+                break;
+            case "s":
+                if (player.frogY < HEIGHT - 1)
+                    player.frogY++;
+                break;
+            case "q": 
+                if (player.frogX > 0)
+                    player.frogX--;
+                break;
+            case "d":
+                if (player.frogX < WIDTH - 1)
+                    player.frogX++;
+                break;
+            case "x":
+                player.isPlaying = false;
+                break;
         }
     
         
@@ -292,7 +341,7 @@ public class FroggerGamer {
                 System.out.println("DEBUG: Victoire détectée !");
                 sendAllMessage("\033[H\033[2J");
                 System.out.flush();
-                running = false;
+                player.running = false;
                 
                 sendAllMessage("🏆 TOUS les emplacements sont remplis ! LE JEU EST TERMINÉ ! 🏆");
                 PlayerInfo W = null;
@@ -330,6 +379,61 @@ public class FroggerGamer {
         player.frogX = WIDTH / 2;
         player.frogY = HEIGHT - 1;
     }
+
+    private static void demarServeur(){
+        
+        try {
+            ServerSocket serverSocket = new ServerSocket(12345);
+            System.out.println("Serveur démarré, en attente de connexions...");
+
+            
+
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+
+                if (players.size() >= NbrPlayer) {
+                    System.out.println("Connexion refusée : le serveur est plein !");
+                    PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                    out.println("Connexion refusée : le serveur est complet !");
+                    clientSocket.close();
+                    continue;
+                }
+
+                if (PartieStarted) {
+                    System.out.println("Connexion refusée : la partie est déjà en cours !");
+                    PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                    out.println("Connexion refusée : la partie a déjà commencé !");
+                    clientSocket.close();
+                    continue;
+                }
+
+                System.out.println("Nouvelle grenouille connectée !");
+                PlayerInfo player = new PlayerInfo(nextPlayerId++);
+                players.put(clientSocket, player);
+
+                ClientHandler clientHandler = new ClientHandler(clientSocket, player);
+                clients.put(clientSocket, clientHandler);
+                clientHandler.start();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        }
+        
+
+        private static void startGameForAllClients() {
+            waitingForPlayers = false; 
+            PartieStarted = true;
+            sendAllMessage("La partie commence ! Bonne chance à tous !");
+            
+            for (ClientHandler client : clients.values()) {
+                startGameForClient(client);
+            }
+        }
+
+
+       
+
     private static String goodJob() {
         return "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀                    ⠀⣀⣀⣀⣀⣀⣀⣤⣤⣤⣤⣤⣤⣤⣤⣤⣶⣶⣦⠤⡤⠶\n" +
         "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀⣀⣀⣀⣀⣠⣤⣤⣤⣤⣤⣶⣶⣶⣶⣶⣾⣿⣿⣿⣿⣿⡿⠿⠿⠿⠿⠿⠿⠿⠿⠟⠛⠛⠛⠿⠿⠻⠋⠟⠍⣿⢿⣮⠀⠀\n" +
@@ -374,41 +478,43 @@ public class FroggerGamer {
                "⠀⠀⠀⠹⣿⣿⣶⣾⣿⣿⣿⠟⠁⠀⠸⢿⣿⠇⠀⠀⠀⠛⠛⠁⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀\n" +
                "⠀⠀⠀⠀⠈⠙⠛⠛⠛⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀";
     }
-    
-    // private static void resetGame() {
-    //     Arrivals.ClearwPositions();
-
-    //     for (PlayerInfo player : players.values()) {
-    //         player.frogX = WIDTH / 2;
-    //         player.frogY = HEIGHT - 1;
-    //     }
-    //     initGame();
-    // }
-    
-    public static void main(String[] args) {
+      
+    private static void Welcome(ClientHandler client) {
+        client.sendMessage( """
+        ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░      ░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓██████████████▓▒░░▒▓████████▓▒░ 
+        ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░     ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░        
+        ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░     ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░        
+        ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓██████▓▒░ ░▒▓█▓▒░     ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓██████▓▒░   
+        ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░     ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░        
+        ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░     ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░        
+         ░▒▓█████████████▓▒░░▒▓████████▓▒░▒▓████████▓▒░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░ 
+        """);
+        client.sendMessage("Etes vous prets a jouer?");
         try {
-            // Initialisation du jeu
-            initGame();
-            
-            // Démarrer le serveur
-            ServerSocket serverSocket = new ServerSocket(12345);
-            System.out.println("Serveur démarré, en attente de connexions...");
-            
-            while (true) {
-                Socket clientSocket = serverSocket.accept();
-                System.out.println("Nouvelle grenouille connectée !");
-                
-                PlayerInfo player = new PlayerInfo(nextPlayerId++);
-                players.put(clientSocket, player);
-                
-                //  gestion client
-                ClientHandler clientHandler = new ClientHandler(clientSocket, player);
-                clients.put(clientSocket, clientHandler);
-                clientHandler.start();
+
+            String message = client.input.readLine();
+            switch (message) {
+                case "o" :
+                    afficherMenuPrincipalClient(client);
+                    break;
+                default:
+                break;
             }
-        } catch (IOException e) {
+            
+        } catch (Exception e) {
+
             e.printStackTrace();
         }
+
+    }
+
+    
+    public static void main(String[] args) {
+        
+            initGame();
+            demarServeur();
+            
+           
     }
     
     private static void initGame() {
