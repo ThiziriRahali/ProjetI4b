@@ -1,4 +1,4 @@
- class PlayerInfo {
+class PlayerInfo {
     public static final int WIDTH = 10;
     private static final int HEIGHT = 10;
     private static final String FROG_TET = "🦎";
@@ -19,13 +19,16 @@
     int niveau;
     String rang;
     boolean isCarnivore;
+    private Equipe equipe;
     
-    public PlayerInfo(int id) {
+    public PlayerInfo(int id, Equipe equipe) {
+        this.equipe = equipe;
         this.id = id;
         initPlayer();
     }
 
-    public PlayerInfo(int id, boolean isCarnivore) {
+    public PlayerInfo(int id, Equipe equipe,boolean isCarnivore) {
+        this.equipe = equipe;
         this.id = id;
         this.isCarnivore = isCarnivore;
         initPlayer();
@@ -64,5 +67,11 @@
         else  if (player.niveau > 8){
             player.frogChar = FROG_PRINCESS+id; 
         }
+    }
+    public void setEquipe(Equipe equipe) {
+        this.equipe = equipe;
+    }
+    public Equipe getEquipe() {
+        return equipe;
     }
 }

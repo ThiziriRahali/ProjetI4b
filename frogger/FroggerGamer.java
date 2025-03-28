@@ -11,6 +11,8 @@ public class FroggerGamer {
     private static final String ROAD_CHAR = ".";
     private static final String TERRE_PLEIN_CHAR = "🌱";
     private static final String FROG_WIN = "🤴";
+    private static final String FROG_DEAD = "⚰️";
+    private static final String FROG_OTHER = "☁️";
     private static volatile int currentPlayers = 0; 
     private static int NbrPlayer =3; 
     private static volatile boolean waitingForPlayers = true; 
@@ -26,6 +28,7 @@ public class FroggerGamer {
     // multijoueur
     private static Map<Socket, ClientHandler> clients = new ConcurrentHashMap<>();
     private static Map<Socket, PlayerInfo> players = new ConcurrentHashMap<>();
+    private static Map<Socket, Equipe> equipes = new ConcurrentHashMap<>();
     private static int nextPlayerId = 1;
     
 
@@ -118,13 +121,22 @@ public class FroggerGamer {
     private static void processMenuChoice(ClientHandler client, int choice) {
         switch (choice) {
             case 1:
-                startGameForClient(client);
+                NbrPlayer = 1;
+                client.requestInput("Quel sera le nom de votre équipe ?: ");
+                try {
+                    String nomEquipe = client.input.readLine();
+                    client.player.getEquipe().setNomEquipe(nomEquipe);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    client.sendMessage("Erreur lors de la lecture du nom de l'équipe.");
+                }
+                startWaitingThread();
                 break;
             case 2:
                 client.requestInput("Insérez le nombre de joueurs"); 
                 try {
 
-                    NbrPlayer= Integer.parseInt(client. input.readLine());
+                    NbrPlayer= Integer.parseInt(client.input.readLine());
                     
                     startWaitingThread();
                     
@@ -156,11 +168,7 @@ public class FroggerGamer {
                     startGameForAllClients();
                     break;
                 }
-                try {
-                    Thread.sleep(5000);  
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                pause(5000);
             }
         }).start();
     }
@@ -200,7 +208,7 @@ public class FroggerGamer {
                 while (player.isPlaying && player.running) {
                     renderForClient(client, player);
                     client.requestMove();
-                    client.sendMessage("Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer : ");
+                    //client.sendMessage("Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer : ");
                     pause(10);
                 }
             });
@@ -212,7 +220,8 @@ public class FroggerGamer {
         client.sendMessage("\033[H\033[2J");
         System.out.flush();
         StringBuilder sb = new StringBuilder();
-        sb.append("Vies restantes : ").append(player.lives).append("\n");
+        sb.append("Vies restantes : ").append(player.lives).append(" | Équipe: ").append(player.getEquipe().getNomEquipe()).append("\n");
+        sb.append("Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer : ").append("\n");
         
         for (int y = 0; y < HEIGHT; y++) {
             for (int x = 0; x < WIDTH; x++) {
@@ -225,11 +234,14 @@ public class FroggerGamer {
                         sb.append(WALL_CHAR);
                     }
                 } else if (x == player.frogX && y == player.frogY) {
-                    sb.append(player.getEmojiNiveau());}
-                 else if (isPlayerAt(x, y, player)) {
-                    sb.append("☁️"); // Autre joueur
-                } 
-                    else if (y == HEIGHT / 2) {
+                    sb.append(player.getEmojiNiveau());
+                }else if (isPlayerAt(x, y, player)) {
+                    if(!player.running){
+                        sb.append(FROG_DEAD); // Joueur mort
+                    }else {
+                        sb.append(FROG_OTHER); // Autre joueur
+                    }
+                }else if (y == HEIGHT / 2) {
                     sb.append(TERRE_PLEIN_CHAR);
                 } else if (isObstacleAt(x, y)) {
                     sb.append(Obstacle.OBSTACLE_CHAR);
@@ -355,9 +367,9 @@ public class FroggerGamer {
                 }
                 getClientForPlayer(W).sendMessage(goodJob());
                 
-                // Announce the winner
                 if (W!= null) {
-                    sendAllMessage("🎖️ Le joueur " + W.id + " remporte la partie avec " + W.cpt + " arrivées ! 🎖️");
+                    //sendAllMessage("🎖️ Le joueur " + W.id + " remporte la partie avec " + W.cpt + " arrivées ! 🎖️");
+                    sendAllMessage("🎖️ L'équipe \""+ W.getEquipe().getNomEquipe() +"\" remporte la partie avec " + W.cpt + " arrivées ! 🎖️");
                 }
                 player.niveau+=player.cpt;
                 askreplay(client);
@@ -408,7 +420,10 @@ public class FroggerGamer {
                 }
 
                 System.out.println("Nouvelle grenouille connectée !");
-                PlayerInfo player = new PlayerInfo(nextPlayerId++);
+                PlayerInfo player = new PlayerInfo(nextPlayerId++, new Equipe(nextPlayerId, "Equipe "+nextPlayerId, null));
+                player.getEquipe().addJoueur(player);
+                player.isCarnivore = false;
+                equipes.put(clientSocket, player.getEquipe());
                 players.put(clientSocket, player);
 
                 ClientHandler clientHandler = new ClientHandler(clientSocket, player);
@@ -489,7 +504,7 @@ public class FroggerGamer {
         ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░     ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░        
          ░▒▓█████████████▓▒░░▒▓████████▓▒░▒▓████████▓▒░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░ 
         """);
-        client.sendMessage("Etes vous prets a jouer?");
+        client.sendMessage("Êtes-vous prêt à jouer ? (o/n) : ");
         try {
 
             String message = client.input.readLine();
