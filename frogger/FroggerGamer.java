@@ -11,7 +11,6 @@ public class FroggerGamer {
     private static final String ROAD_CHAR = ".";
     private static final String TERRE_PLEIN_CHAR = "🌱";
     private static final String FROG_WIN = "🤴";
-    private static final String FROG_DEAD = "⚰️";
     private static final String FROG_OTHER = "☁️";
     private static volatile int currentPlayers = 0; 
     private static int NbrPlayer =3; 
@@ -233,14 +232,8 @@ public class FroggerGamer {
                     } else {
                         sb.append(WALL_CHAR);
                     }
-                } else if (x == player.frogX && y == player.frogY) {
-                    sb.append(player.getEmojiNiveau());
-                }else if (isPlayerAt(x, y, player)) {
-                    if(!player.running){
-                        sb.append(FROG_DEAD); // Joueur mort
-                    }else {
-                        sb.append(FROG_OTHER); // Autre joueur
-                    }
+                } else if (getPlayerAt(x, y) != null) {
+                    sb.append(getPlayerAt(x, y).getEmojiNiveau()); // Utilisation de getEmojiNiveau pour les autres joueurs
                 }else if (y == HEIGHT / 2) {
                     sb.append(TERRE_PLEIN_CHAR);
                 } else if (isObstacleAt(x, y)) {
@@ -262,6 +255,15 @@ public class FroggerGamer {
             }
         }
         return false;
+    }
+
+    public static PlayerInfo getPlayerAt(int x, int y) {
+        for (PlayerInfo player : players.values()) {
+            if (player.frogX == x && player.frogY == y) {
+                return player;
+            }
+        }
+        return null;
     }
 
     public static synchronized void checkAllPlayersCollisions() {
