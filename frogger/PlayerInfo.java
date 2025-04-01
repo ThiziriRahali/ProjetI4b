@@ -4,6 +4,7 @@ class PlayerInfo {
     private static final String FROG_TET = "🦎";
     private static final String FROG_CHAR = "🐸";
     private static final String FROG_DRAG = "🐲";
+    private static final String FROG_DEAD = "⚰️";
     private static final int LIVES_MAX = 3;
     private static final String FROG_PRINCESS = "👸";
     private static final String FROG_MEAN = "😈";
@@ -43,6 +44,10 @@ class PlayerInfo {
         this.frogChar = FROG_TET + id;
     }
 
+    public boolean getCarni(){
+        return this.isCarnivore;
+    }
+
     public void isMechant(){
         if (this.isCarnivore){
             this.frogChar=FROG_MEAN;
@@ -50,11 +55,26 @@ class PlayerInfo {
     }
 
     public String getEmojiNiveau() {
-        actuEmoji(this);
-        return frogChar;
+        if(this.lives > 0) {
+            actuEmoji(this);
+            return frogChar;
+        }
+        else if (this.lives == 0 && this.isCarnivore){
+            return FROG_MEAN+id;
+        }
+        else if (this.lives == 0 && !this.isCarnivore){
+            return FROG_DEAD+id;
+        }
+        else if (this.lives < 0){
+            return FROG_DEAD+id;
+        }
+        return "";
     }
 
     public void actuEmoji(PlayerInfo player){
+        if( player.isCarnivore){
+            player.frogChar=FROG_MEAN;
+        }
         if (player.niveau > 0 && player.niveau<=2){
             player.frogChar = FROG_TET + id;
         }

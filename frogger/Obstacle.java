@@ -7,7 +7,8 @@ class Obstacle extends Thread {
     private boolean active = true;
     public static final int WIDTH = 10;
     private static final int HEIGHT = 10;
-    public static final String OBSTACLE_CHAR = "🚣";
+    private static final String OBSTACLE_CHARA = "🚣";
+    private static final String OBSTACLE_CHARB = "🦅";
     public static final String FINISH_LINE_CHAR = "🏁";
     
     public Obstacle(int x, int y) {
@@ -49,5 +50,7 @@ class Obstacle extends Thread {
 
     public int getX() { return x; }
     public int getY() { return y; }
-    public String getChar() { return OBSTACLE_CHAR; }
+    public static String getCharA() { return OBSTACLE_CHARA; }
+    public static String getCharB() { return OBSTACLE_CHARB; }
+
 }
