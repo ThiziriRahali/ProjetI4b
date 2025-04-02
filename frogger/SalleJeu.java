@@ -14,6 +14,7 @@ public class SalleJeu {
     private Arrivals arrivals;
     private static final int HEIGHT = 10;
     private int currentPlayers;
+    private NotreTimer timer;
     public List<Equipe> equipes;
 
     public SalleJeu(int salleId, String salleName) {
@@ -172,6 +173,24 @@ public class SalleJeu {
         System.out.println("Répartition terminée :");
         System.out.println("Équipe 1 : " + equipe1.getNomEquipe() + " (" + equipe1.getNbJoueurs() + " joueurs)");
         System.out.println("Équipe 2 : " + equipe2.getNomEquipe() + " (" + equipe2.getNbJoueurs() + " joueurs)");
+    }
+
+    public void setTimer(NotreTimer timer) {
+        this.timer = timer;
+    }
+
+    public NotreTimer getTimer() {
+        return this.timer;
+    }
+    public void startTimer(int durationInSeconds, Runnable onTimeUp) {
+        
+        timer = new NotreTimer(durationInSeconds, onTimeUp, this);
+        timer.start();
+    }
+    public void stopTimer() {
+        if (timer != null) {
+            timer.stopTimer();
+        }
     }
 
 }

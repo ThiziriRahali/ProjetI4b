@@ -482,7 +482,7 @@ public class FroggerGamer {
             
             
             if (salle.getArrivals().GlobalWin()) {
-                System.out.println("DEBUG: Victoire détectée !");
+                
                 sendAllMessage("\033[H\033[2J");
                 System.out.flush();
                 notifysallePlayers(salle, "🏆 TOUS les emplacements sont remplis ! LE JEU EST TERMINÉ ! 🏆");
@@ -510,7 +510,7 @@ public class FroggerGamer {
         }
     }
 
-    private static ClientHandler getClientForPlayer(PlayerInfo player) {
+    public static ClientHandler getClientForPlayer(PlayerInfo player) {
         for (Map.Entry<Socket, PlayerInfo> entry : players.entrySet()) {
             if (entry.getValue() == player) {
                 return clients.get(entry.getKey());
@@ -872,27 +872,105 @@ public class FroggerGamer {
         }
     }
     
+    // private static void startGameForsalle(SalleJeu salle) {
+    //     salle.setGameStarted(true);
+    //     if (salle.getGameMode().equals("Competitif")){
+            
+            
+    //     }
+        
+    //     salle.initializeGame();
+        
+    //     notifysallePlayers(salle, "😊 La partie commence dans la salle : " + salle.getsalleName() + " !");
+    //     int i = 0;
+    //     for (PlayerInfo player : salle.players) {
+    //         if (player.getCurrentsalleId() == salle.getsalleId()) {
+    //             ClientHandler client = getClientForPlayer(player);
+    //             if (client != null) {
+    //                 player.isPlaying = true;
+    //                 player.running = true;
+    //                 player.lives = LIVES_MAX;
+    //                 player.cpt = 0;
+    //                 resetFrog(player, i , HEIGHT - 1);
+    //                 i += 2;
+                    
+    //                 Thread gameThread = new Thread(() -> {
+    //                     while (player.isPlaying && player.running && salle.isGameStarted()) {
+    //                         renderForClient(client, player);
+    //                         client.requestMove();
+    //                         pause(10);
+    //                     }
+    //                 });
+    //                 gameThread.start();
+    //             }
+    //         }
+    //     }
+        
+    //     if (salle.getGameMode().equals("Collaboratif")) {
+    //         chooseMechantPlayerForsalle(salle);
+    //     }
+    // }
+    // private static void startGameForsalle(SalleJeu salle) {
+    //     salle.setGameStarted(true);
+    //     salle.initializeGame();
+    //     notifysallePlayers(salle, "😊 La partie commence dans la salle : " + salle.getsalleName() + " !");
+        
+    //     int i = 0;
+    //     for (PlayerInfo player : salle.players) {
+    //         if (player.getCurrentsalleId() == salle.getsalleId()) {
+    //             ClientHandler client = getClientForPlayer(player);
+    //             if (client != null) {
+    //                 player.isPlaying = true;
+    //                 player.running = true;
+    //                 player.lives = LIVES_MAX;
+    //                 player.cpt = 0;
+    //                 resetFrog(player, i, HEIGHT - 1);
+    //                 i += 2;
+    
+    //                 Thread gameThread = new Thread(() -> {
+    //                     while (player.isPlaying && player.running && salle.isGameStarted()) {
+    //                         renderForClient(client, player);
+    //                         client.requestMove();
+    //                         pause(10);
+    //                     }
+    //                 });
+    //                 gameThread.start();
+    //             }
+    //         }
+    //     }
+    
+    //     if (salle.getGameMode().equals("Collaboratif")) {
+    //                 chooseMechantPlayerForsalle(salle);
+    //             }
+    //     if (salle.getGameMode().equals("Competitif")) {
+    //         salle.startTimer(60, () -> { 
+    //             notifysallePlayers(salle, "⏰ Temps écoulé ! La partie est terminée !");
+    //             endGameForCompetitiveMode(salle);
+    //         });
+    //     }
+    // }
     private static void startGameForsalle(SalleJeu salle) {
         salle.setGameStarted(true);
-        
         salle.initializeGame();
-        
         notifysallePlayers(salle, "😊 La partie commence dans la salle : " + salle.getsalleName() + " !");
+        
         int i = 0;
         for (PlayerInfo player : salle.players) {
             if (player.getCurrentsalleId() == salle.getsalleId()) {
+                
                 ClientHandler client = getClientForPlayer(player);
                 if (client != null) {
                     player.isPlaying = true;
                     player.running = true;
                     player.lives = LIVES_MAX;
                     player.cpt = 0;
-                    resetFrog(player, i , HEIGHT - 1);
+                    resetFrog(player, i, HEIGHT - 1);
                     i += 2;
-                    
+    
                     Thread gameThread = new Thread(() -> {
                         while (player.isPlaying && player.running && salle.isGameStarted()) {
                             renderForClient(client, player);
+                            
                             client.requestMove();
                             pause(10);
                         }
@@ -901,10 +979,41 @@ public class FroggerGamer {
                 }
             }
         }
-        
-        if (salle.getGameMode().equals("Collaboratif")) {
-            chooseMechantPlayerForsalle(salle);
+        if (salle.getGameMode().equals("Competition")) {
+                    
+            salle.startTimer(90, () -> { 
+                notifysallePlayers(salle, "⏰ Temps écoulé ! La partie est terminée !");
+                endGameForCompetitiveMode(salle);
+            });
         }
+      
+        if (salle.getGameMode().equals("Collaboratif")) {
+                            chooseMechantPlayerForsalle(salle);
+                        }
+    
+      
+    }
+    private static void endGameForCompetitiveMode(SalleJeu salle) {
+        salle.setGameStarted(false);
+    
+        // Trouver le joueur avec le score le plus élevé
+        PlayerInfo winner = null;
+        int maxScore = -1;
+        for (PlayerInfo player : salle.players) {
+            if (player.cpt > maxScore) {
+                maxScore = player.cpt;
+                winner = player;
+            }
+        }
+    
+        if (winner != null) {
+            notifysallePlayers(salle, "🏆 Le joueur " + winner.id + " de l'équipe \"" + winner.getEquipe().getNomEquipe() + "\" a gagné avec " + maxScore + " points !");
+        } else {
+            notifysallePlayers(salle, "😐 Aucun gagnant. La partie est terminée.");
+        }
+    
+        // Arrêter le timer
+        salle.stopTimer();
     }
     
     private static void chooseMechantPlayerForsalle(SalleJeu salle) {
@@ -1001,41 +1110,41 @@ public class FroggerGamer {
 
         }
     }
-    private static void choisirJoueurMechant() {
-        System.out.print("je suis mechant");
-        while (players.size() < NbrPlayer) {
-            sendAllMessage("En attente de joueurs pour choisir un méchant...");
-            pause(5000);
+    // private static void choisirJoueurMechant() {
+    //     System.out.print("je suis mechant");
+    //     while (players.size() < NbrPlayer) {
+    //         sendAllMessage("En attente de joueurs pour choisir un méchant...");
+    //         pause(5000);
 
-        }
+    //     }
     
-        List<PlayerInfo> joueurs = new ArrayList<>(players.values());
-        Random random = new Random();
-        PlayerInfo mechant = joueurs.get(random.nextInt(joueurs.size()));
+    //     List<PlayerInfo> joueurs = new ArrayList<>(players.values());
+    //     Random random = new Random();
+    //     PlayerInfo mechant = joueurs.get(random.nextInt(joueurs.size()));
     
-        mechant.isCarnivore = true; 
-        ClientHandler clientMechant = getClientForPlayer(mechant);
+    //     mechant.isCarnivore = true; 
+    //     ClientHandler clientMechant = getClientForPlayer(mechant);
     
-        if (clientMechant != null) {
-            clientMechant.sendMessage("😈 Vous avez été choisi comme le joueur méchant !");
-        }
+    //     if (clientMechant != null) {
+    //         clientMechant.sendMessage("😈 Vous avez été choisi comme le joueur méchant !");
+    //     }
         
-        sendAllMessage("Un joueur méchant a été désigné ! Faites attention !");
-    }
+    //     sendAllMessage("Un joueur méchant a été désigné ! Faites attention !");
+    // }
     
-    private static boolean isObstacleAt(int x, int y) {
-        for (Obstacle obs : obstaclesA) {
-            if (obs.getX() == x && obs.getY() == y) {
-                return true;
-            }
-        }
-        for (Obstacle obs : obstaclesB) {
-            if (obs.getX() == x && obs.getY() == y) {
-                return true;
-            }
-        }
-        return false;
-    }
+    // private static boolean isObstacleAt(int x, int y) {
+    //     for (Obstacle obs : obstaclesA) {
+    //         if (obs.getX() == x && obs.getY() == y) {
+    //             return true;
+    //         }
+    //     }
+    //     for (Obstacle obs : obstaclesB) {
+    //         if (obs.getX() == x && obs.getY() == y) {
+    //             return true;
+    //         }
+    //     }
+    //     return false;
+    // }
     
     // private static void stopAllObstacles() {
     //     if (obstacles != null) {

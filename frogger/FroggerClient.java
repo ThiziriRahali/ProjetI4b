@@ -22,22 +22,42 @@ public class FroggerClient {
             output.println("JOIN");
 
             //  recevoir messages serveur
+            // Thread receiveThread = new Thread(() -> {
+            //     try {
+            //         String message;
+            //         while (running && (message = input.readLine()) != null) {
+            //             if (message.startsWith("INPUT:")) {
+            //                 String prompt = message.substring(6);
+            //                 System.out.println(prompt);
+            //             } 
+                        
+            //             else if (message.equals("MOVE")) {
+                            
+            //                 output.println("BOUGE");
+                            
+            //             }
+                       
+            //             else {
+            //                 System.out.println(message);
+            //             }
+            //         }
+            //     } catch (IOException e) {
+            //         if (running) {
+            //             System.out.println("Déconnecté du serveur: " + e.getMessage());
+            //         }
+            //     }
+            // });
             Thread receiveThread = new Thread(() -> {
                 try {
                     String message;
                     while (running && (message = input.readLine()) != null) {
+                        
                         if (message.startsWith("INPUT:")) {
                             String prompt = message.substring(6);
                             System.out.println(prompt);
-                        } 
-                        
-                        else if (message.equals("MOVE")) {
-                            
+                        } else if (message.equals("MOVE")) {
                             output.println("BOUGE");
-                            
-                        }
-                       
-                        else {
+                        } else {
                             System.out.println(message);
                         }
                     }
