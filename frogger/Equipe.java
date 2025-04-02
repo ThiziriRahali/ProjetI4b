@@ -1,4 +1,5 @@
 import java.util.*;
+import frogger.*;
 
 class Equipe {
     private int idEquipe;

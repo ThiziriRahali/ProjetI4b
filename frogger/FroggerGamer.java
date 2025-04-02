@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import frogger.*;
 
 public class FroggerGamer {
     public static final String FINISH_LINE_CHAR = "🏁";

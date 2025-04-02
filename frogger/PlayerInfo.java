@@ -1,3 +1,5 @@
+import frogger.*;
+
 class PlayerInfo {
     public static final int WIDTH = 10;
     private static final int HEIGHT = 10;

@@ -1,3 +1,5 @@
+import frogger.*;
+
 class Timer extends Thread {
     private int compteur = 0;
 

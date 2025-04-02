@@ -1,3 +1,4 @@
+import frogger.*;
 
 import java.util.*;
 public class Arrivals {

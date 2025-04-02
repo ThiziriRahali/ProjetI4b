@@ -2,13 +2,14 @@ import java.io.*;
 import java.net.*;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
+import frogger.*;
 
 public class FroggerClient {
     private static final Scanner scanner = new Scanner(System.in);
     private static Socket socket;
     private static BufferedReader input;
     private static PrintWriter output;
-    private static AtomicBoolean running = new AtomicBoolean(true);
+    private static boolean running = true;
 
     public static void main(String[] args) {
         try {
@@ -26,7 +27,7 @@ public class FroggerClient {
             Thread receiveThread = new Thread(() -> {
                 try {
                     String message;
-                    while (running.get() && (message = input.readLine()) != null) {
+                    while (running && (message = input.readLine()) != null) {
                         // Si message est demande de saisie, ne pas afficher
                         if (message.startsWith("INPUT:")) {
                             String prompt = message.substring(6);
@@ -38,16 +39,13 @@ public class FroggerClient {
                             output.println("BOUGE");
                             
                         }
-                        else if (message.equals("EYO")) {
-                            output.println("JOIN");
-                        }
                        
                         else {
                             System.out.println(message);
                         }
                     }
                 } catch (IOException e) {
-                    if (running.get()) {
+                    if (running) {
                         System.out.println("Déconnecté du serveur: " + e.getMessage());
                     }
                 }
@@ -56,12 +54,12 @@ public class FroggerClient {
             receiveThread.start();
 
             String userInput;
-            while (running.get() && (userInput = scanner.nextLine()) != null) {
+            while (running && (userInput = scanner.nextLine()) != null) {
                 output.println(userInput);
                 
                 // Si l'utilisateur veut quitter
                 if (userInput.equals("QUIT") || userInput.equals("x")) {
-                    running.set(false);
+                    running = false;
                     break;
                 }
             }
