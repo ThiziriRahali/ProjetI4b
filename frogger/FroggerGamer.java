@@ -13,11 +13,21 @@ public class FroggerGamer {
     private static final String TERRE_PLEIN_CHAR = "🌱";
     private static final String FROG_WIN = "🤴";
     private static final String DEPART_CHAR = "⬆️";
-    // private static final String FROG_OTHER = "☁️";
     private static volatile int currentPlayers = 0; 
-    private static int NbrPlayer =3; 
-    private static volatile boolean waitingForPlayers = true; 
-    private static final List<PlayerInfo> allPlayers = new ArrayList<>();
+    public static int NbrPlayer =3; 
+    private static Map<Integer, SalleJeu> sallesJeu = new ConcurrentHashMap<>();
+    private static int nextRoomId = 1;
+
+
+    private static synchronized SalleJeu createSalleJeu(String roomName) {
+        SalleJeu salle = new SalleJeu(nextRoomId++, roomName);
+        sallesJeu.put(salle.getRoomId(), salle);
+        return salle;
+    }
+
+    private static SalleJeu getSalleJeuById(int roomId) {
+        return sallesJeu.get(roomId);
+    }
 
 
 
@@ -36,7 +46,7 @@ public class FroggerGamer {
     private static int nextPlayerId = 1;
     
 
-    
+   
     
     //  client connecté
     static class ClientHandler extends Thread {
@@ -378,12 +388,12 @@ public class FroggerGamer {
                 if (client != null) {
                     client.sendMessage(GameOver());
                     client.sendMessage("Game Over ! Vous avez perdu toutes vos vies.");
-                    player.running = false;
+                    player.isPlaying = false;
                     askreplay(client);
                     return;
                 }
             } else {
-                resetFrog(player);
+                resetFrog(player, 0 ,HEIGHT - 1);
             }
         }
         
@@ -391,57 +401,59 @@ public class FroggerGamer {
     
 
     private static void askreplay(ClientHandler client) {
-        client.requestInput("Voulez-vous rejouer ? (y/n) : ");
-        try {
-            String choix = client.input.readLine();
-            switch (choix) {
-                case "y":
-                    // Réinitialiser l'état du joueur
-                    PlayerInfo player = players.get(client.socket);
-                    if (player != null) {
-                        player.running = false;
-                        player.isPlaying = false;
-                        player.lives = LIVES_MAX;
-                        player.cpt = 0;
-                        resetFrog(player);
-                    }
-                    
-                    // Si tous les joueurs sont morts, réinitialiser le jeu complet
-                    boolean allPlayersInactive = true;
-                    for (PlayerInfo p : players.values()) {
-                        if (p.isPlaying && p.running) {
-                            allPlayersInactive = false;
+        new Thread(() -> {
+            client.requestInput("Voulez-vous rejouer ? (y/n) : ");
+            try {
+                String choix = client.input.readLine();
+                if(choix != null){
+                    switch (choix) {
+                        case "y":
+                            PlayerInfo player = players.get(client.socket);
+                            if (player != null) {
+                                player.running = false;
+                                player.isPlaying = false;
+                                player.lives = LIVES_MAX;
+                                player.cpt = 0;
+                                resetFrog(player, 0 ,HEIGHT - 1);
+                            }
+        
+                            boolean allPlayersInactive = true;
+                            for (PlayerInfo p : players.values()) {
+                                if (p.isPlaying && p.running) {
+                                    allPlayersInactive = false;
+                                    break;
+                                }
+                            }
+        
+                            if (allPlayersInactive) {
+                                PartieStarted = false;
+                                Arrivals.ClearwPositions();
+                            }
+        
+                            afficherMenuPrincipalClient(client);
                             break;
-                        }
+        
+                        case "n":
+                            client.sendMessage("Au revoir !");
+                            try {
+                                removeClient(client.socket);
+                                client.socket.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            break;
+        
+                        default:
+                            askreplay(client); 
                     }
-                    
-                    if (allPlayersInactive) {
-                        PartieStarted = false;
-                        Arrivals.ClearwPositions();
-                        // Réinitialiser les obstacles si nécessaire
-                    }
-                    
-                    afficherMenuPrincipalClient(client);
-                    break;
-                    
-                case "n":
-                    client.sendMessage("Au revoir !");
-                    try {
-                        removeClient(client.socket);
-                        client.socket.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                    
-                default:
-                    askreplay(client);
+
+                }
+                
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        }).start();
     }
-  
 
     private static void updatePlayer(PlayerInfo player, String move) {
        
@@ -476,7 +488,7 @@ public class FroggerGamer {
                 player.cpt++;
                 
                 sendAllMessage("🎉 Félicitations ! Un prince est apparu !");
-                resetFrog(player);
+                resetFrog(player, 0 ,HEIGHT - 1);
             }
             
             
@@ -484,7 +496,7 @@ public class FroggerGamer {
                 System.out.println("DEBUG: Victoire détectée !");
                 sendAllMessage("\033[H\033[2J");
                 System.out.flush();
-                player.running = false;
+                player.isPlaying = false;
                 
                 sendAllMessage("🏆 TOUS les emplacements sont remplis ! LE JEU EST TERMINÉ ! 🏆");
                 PlayerInfo W = null;
@@ -517,45 +529,27 @@ public class FroggerGamer {
     }
     
    
-    private static void resetFrog(PlayerInfo player) {
-        player.frogX = WIDTH / 2;
-        player.frogY = HEIGHT - 1;
+    private static void resetFrog(PlayerInfo player, int x, int y) {
+        player.frogX = x ;
+        player.frogY = y ;
     }
 
-    private static void demarServeur(){
-        
+    private static void demarServeur() {
         try {
             ServerSocket serverSocket = new ServerSocket(12345);
             System.out.println("Serveur démarré, en attente de connexions...");
-
-            
-
+    
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-
-                if (players.size() >= NbrPlayer) {
-                    System.out.println("Connexion refusée : le serveur est plein !");
-                    PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-                    out.println("Connexion refusée : le serveur est complet !");
-                    clientSocket.close();
-                    continue;
-                }
-
-                if (PartieStarted) {
-                    System.out.println("Connexion refusée : la partie est déjà en cours !");
-                    PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-                    out.println("Connexion refusée : la partie a déjà commencé !");
-                    clientSocket.close();
-                    continue;
-                }
-
-                System.out.println("Nouvelle grenouille connectée !");
+                System.out.println("Nouvelle connexion entrante !");
+    
                 PlayerInfo player = new PlayerInfo(nextPlayerId++, new Equipe(nextPlayerId, "Equipe "+nextPlayerId, null));
                 player.getEquipe().addJoueur(player);
                 player.isCarnivore = false;
+                
                 equipes.put(clientSocket, player.getEquipe());
                 players.put(clientSocket, player);
-
+    
                 ClientHandler clientHandler = new ClientHandler(clientSocket, player);
                 clients.put(clientSocket, clientHandler);
                 clientHandler.start();
@@ -563,11 +557,11 @@ public class FroggerGamer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        }
+    }
         
 
         private static void startGameForAllClients() {
-            waitingForPlayers = false;
+            
             PartieStarted = true;
             Arrivals.ClearwPositions();
             
@@ -645,23 +639,297 @@ public class FroggerGamer {
             ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░     ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░        
              ░▒▓█████████████▓▒░░▒▓████████▓▒░▒▓████████▓▒░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░ 
             """);
-        client.sendMessage("Êtes-vous prêt à jouer ? (o/n) : ");
+            client.sendMessage("Êtes-vous prêt à jouer ? (o/n) : ");
+            try {
+                String message = client.input.readLine();
+                switch (message) {
+                    case "o":
+                        offerRoomOptions(client);
+                        break;
+                    default:
+                        break;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        
+        private static void offerRoomOptions(ClientHandler client) {
+            client.sendMessage("\n=== Gestion des Salles ===");
+            client.sendMessage("1. Créer une nouvelle salle de jeu");
+            client.sendMessage("2. Rejoindre une salle existante");
+            client.sendMessage("3. Retour au menu principal");
+            client.requestInput("Veuillez choisir une option : ");
+            
+            try {
+                String choice = client.input.readLine();
+                switch (choice) {
+                    case "1":
+                        createNewRoom(client);
+                        break;
+                    case "2":
+                        joinExistingRoom(client);
+                        break;
+                    case "3":
+                        afficherMenuPrincipalClient(client);
+                        break;
+                    default:
+                        client.sendMessage("Choix invalide. Veuillez réessayer.");
+                        offerRoomOptions(client);
+                        break;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        
+        
+    }
+    private static void createNewRoom(ClientHandler client) {
+        client.requestInput("Entrez un nom pour votre salle de jeu : ");
         try {
-
-            String message = client.input.readLine();
-            switch (message) {
-                case "o" :
-                    afficherMenuPrincipalClient(client);
-                    break;
-                default:
-                break;
+            String roomName = client.input.readLine();
+            SalleJeu newRoom = createSalleJeu(roomName);
+            
+            // Associate player with this room
+            PlayerInfo player = players.get(client.socket);
+            if (player != null) {
+                player.setCurrentRoomId(newRoom.getRoomId());
+                
+                client.sendMessage("Salle créée avec succès ! ID de la salle : " + newRoom.getRoomId());
+                client.sendMessage("Vous êtes maintenant dans la salle : " + roomName);
+                
+                // Setup room waiting
+                roomSetupOptions(client, newRoom);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            client.sendMessage("Erreur lors de la création de la salle.");
+            offerRoomOptions(client);
+        }
+    }
+    
+    private static void joinExistingRoom(ClientHandler client) {
+        // List available rooms
+        if (sallesJeu.isEmpty()) {
+            client.sendMessage("Aucune salle disponible. Veuillez créer une nouvelle salle.");
+            offerRoomOptions(client);
+            return;
+        }
+        
+        client.sendMessage("\n=== Salles Disponibles ===");
+        for (SalleJeu room : sallesJeu.values()) {
+            if (!room.isGameStarted() && room.getCurrentPlayers() < room.getMaxPlayers()) {
+                client.sendMessage(room.getRoomId() + ". " + room.getRoomName() + 
+                        " (" + room.getCurrentPlayers() + "/" + room.getMaxPlayers() + " joueurs)");
+            }
+        }
+        
+        client.requestInput("Entrez l'ID de la salle que vous souhaitez rejoindre (ou 0 pour revenir) : ");
+        try {
+            int roomId = Integer.parseInt(client.input.readLine());
+            if (roomId == 0) {
+                offerRoomOptions(client);
+                return;
             }
             
-        } catch (Exception e) {
-
+            SalleJeu room = getSalleJeuById(roomId);
+            if (room == null) {
+                client.sendMessage("ID de salle invalide. Veuillez réessayer.");
+                joinExistingRoom(client);
+                return;
+            }
+            
+            if (room.isGameStarted()) {
+                client.sendMessage("Cette partie a déjà commencé. Veuillez choisir une autre salle.");
+                joinExistingRoom(client);
+                return;
+            }
+            
+            if (room.getCurrentPlayers() >= room.getMaxPlayers()) {
+                client.sendMessage("Cette salle est pleine. Veuillez choisir une autre salle.");
+                joinExistingRoom(client);
+                return;
+            }
+            
+            // Add player to the roo
+            PlayerInfo player = players.get(client.socket);
+            if (player != null) {
+                player.setCurrentRoomId(room.getRoomId());
+                room.addPlayer(player);
+                
+                client.sendMessage("Vous avez rejoint la salle : " + room.getRoomName());
+                
+                notifyRoomPlayers(room, "Joueur " + player.id + " a rejoint la salle !");
+                
+                if (room.getCurrentPlayers() >= room.getMaxPlayers()) {
+                    notifyRoomPlayers(room, "La salle est pleine. La partie va commencer !");
+                    startGameForRoom(room);
+                } else {
+                    client.sendMessage("En attente d'autres joueurs... (" + 
+                            room.getCurrentPlayers() + "/" + room.getMaxPlayers() + ")");
+                }
+            }
+        } catch (NumberFormatException e) {
+            client.sendMessage("ID de salle invalide. Veuillez entrer un nombre.");
+            joinExistingRoom(client);
+        } catch (IOException e) {
             e.printStackTrace();
         }
-
+    }
+    
+    private static void roomSetupOptions(ClientHandler client, SalleJeu room) {
+        client.sendMessage("\n=== Configuration de la Salle ===");
+        client.sendMessage("1. Définir le nombre maximum de joueurs");
+        client.sendMessage("2. Choisir le mode de jeu (Collaboratif/Compétition)");
+        client.sendMessage("3. Démarrer la partie");
+        client.sendMessage("4. Retour au menu des salles");
+        client.requestInput("Veuillez choisir une option : ");
+        
+        try {
+            String choice = client.input.readLine();
+            switch (choice) {
+                case "1":
+                    client.requestInput("Entrez le nombre maximum de joueurs (2-10) : ");
+                    try {
+                        int maxPlayers = Integer.parseInt(client.input.readLine());
+                        if (maxPlayers >= 2 && maxPlayers <= 10) {
+                            room.setMaxPlayers(maxPlayers);
+                            client.sendMessage("Nombre maximum de joueurs défini à " + maxPlayers);
+                        } else {
+                            client.sendMessage("Nombre invalide. Veuillez entrer un nombre entre 2 et 10.");
+                        }
+                    } catch (NumberFormatException e) {
+                        client.sendMessage("Entrée invalide. Veuillez entrer un nombre.");
+                    }
+                    roomSetupOptions(client, room);
+                    break;
+                    
+                case "2":
+                    client.sendMessage("Choisissez un mode de jeu :");
+                    client.sendMessage("1. Mode Collaboratif");
+                    client.sendMessage("2. Mode Competition");
+                    client.requestInput("Entrez votre choix (1 ou 2) : ");
+                    
+                    try {
+                        int modeChoice = Integer.parseInt(client.input.readLine());
+                        room.setGameMode(modeChoice == 1 ? "Collaboratif" : "Competition");
+                        client.sendMessage("Mode de jeu défini à : " + room.getGameMode());
+                    } catch (NumberFormatException e) {
+                        client.sendMessage("Choix invalide. Mode par défaut (Competition) utilisé.");
+                        room.setGameMode("Competition");
+                    }
+                    roomSetupOptions(client, room);
+                    break;
+                    
+                case "3":
+                    if (room.getCurrentPlayers() < 2) {
+                        client.sendMessage("Il faut au moins 2 joueurs pour démarrer la partie.");
+                        client.sendMessage("En attente d'autres joueurs... (" + 
+                                room.getCurrentPlayers() + "/" + room.getMaxPlayers() + ")");
+                                
+                        startRoomWaitingThread(room);
+                    } else {
+                        startGameForRoom(room);
+                    }
+                    break;
+                    
+                case "4":
+                    offerRoomOptions(client);
+                    break;
+                    
+                default:
+                    client.sendMessage("Choix invalide. Veuillez réessayer.");
+                    roomSetupOptions(client, room);
+                    break;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private static void startRoomWaitingThread(SalleJeu room) {
+        new Thread(() -> {
+            while (!room.isGameStarted() && room.getCurrentPlayers() < room.getMaxPlayers()) {
+                notifyRoomPlayers(room, "En attente de joueurs... (" + 
+                        room.getCurrentPlayers() + "/" + room.getMaxPlayers() + ")");
+                pause(5000);
+            }
+            
+            if (!room.isGameStarted() && room.getCurrentPlayers() >= room.getMaxPlayers()) {
+                notifyRoomPlayers(room, "Nombre de joueurs atteint ! La partie va commencer.");
+                startGameForRoom(room);
+            }
+        }).start();
+    }
+    
+    private static void notifyRoomPlayers(SalleJeu room, String message) {
+        for (PlayerInfo player : players.values()) {
+            if (player.getCurrentRoomId() == room.getRoomId()) {
+                ClientHandler client = getClientForPlayer(player);
+                if (client != null) {
+                    client.sendMessage(message);
+                }
+            }
+        }
+    }
+    
+    private static void startGameForRoom(SalleJeu room) {
+        room.setGameStarted(true);
+        
+        room.initializeGame();
+        
+        notifyRoomPlayers(room, "La partie commence dans la salle : " + room.getRoomName() + " !");
+        int i = 0;
+        for (PlayerInfo player : players.values()) {
+            if (player.getCurrentRoomId() == room.getRoomId()) {
+                ClientHandler client = getClientForPlayer(player);
+                if (client != null) {
+                    player.isPlaying = true;
+                    player.running = true;
+                    player.lives = LIVES_MAX;
+                    player.cpt = 0;
+                    resetFrog(player, i , HEIGHT - 1);
+                    i += 2;
+                    
+                    Thread gameThread = new Thread(() -> {
+                        while (player.isPlaying && player.running && room.isGameStarted()) {
+                            renderForClient(client, player);
+                            client.requestMove();
+                            pause(10);
+                        }
+                    });
+                    gameThread.start();
+                }
+            }
+        }
+        
+        if (room.getGameMode().equals("Collaboratif")) {
+            chooseEvilPlayerForRoom(room);
+        }
+    }
+    
+    private static void chooseEvilPlayerForRoom(SalleJeu room) {
+        List<PlayerInfo> roomPlayers = new ArrayList<>();
+        
+        for (PlayerInfo player : players.values()) {
+            if (player.getCurrentRoomId() == room.getRoomId()) {
+                roomPlayers.add(player);
+            }
+        }
+        
+        if (!roomPlayers.isEmpty()) {
+            Random random = new Random();
+            PlayerInfo mechant = roomPlayers.get(random.nextInt(roomPlayers.size()));
+            
+            mechant.isCarnivore = true;
+            ClientHandler clientMechant = getClientForPlayer(mechant);
+            
+            if (clientMechant != null) {
+                clientMechant.sendMessage("😈 Vous avez été choisi comme le joueur méchant !");
+            }
+            
+            notifyRoomPlayers(room, "Un joueur méchant a été désigné ! Faites attention !");
+        }
     }
 
     
@@ -689,12 +957,12 @@ public class FroggerGamer {
                     if (cP2 != null) {
                         cP2.sendMessage(GameOver());
                         cP2.sendMessage("Game Over ! Vous avez perdu toutes vos vies.");
-                        p2.running = false;
+                        p2.isPlaying = false;
                         askreplay(cP2);
                         return;
                     }
                 }
-                resetFrog(p2);
+                resetFrog(p2 , 0 , HEIGHT - 1);
                 
 
             }
@@ -709,12 +977,12 @@ public class FroggerGamer {
                     if (cP1 != null) {
                         cP1.sendMessage(GameOver());
                         cP1.sendMessage("Game Over ! Vous avez perdu toutes vos vies.");
-                        p1.running = false;
+                        p1.isPlaying = false;
                         askreplay(cP1);
                         return;
                     }
                 }
-                resetFrog(p1);
+                resetFrog(p1, 0 , HEIGHT - 1);
 
             }
         }

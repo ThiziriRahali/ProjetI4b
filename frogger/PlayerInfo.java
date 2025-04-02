@@ -8,6 +8,7 @@ class PlayerInfo {
     private static final int LIVES_MAX = 3;
     private static final String FROG_PRINCESS = "👸";
     private static final String FROG_MEAN = "😈";
+    private int currentRoomId;
 
     public boolean running= true;
     int id;
@@ -32,6 +33,7 @@ class PlayerInfo {
         this.equipe = equipe;
         this.id = id;
         this.isCarnivore = isCarnivore;
+        this.currentRoomId = -1;
         initPlayer();
     }
 
@@ -52,6 +54,14 @@ class PlayerInfo {
         if (this.isCarnivore){
             this.frogChar=FROG_MEAN;
         }
+    }
+     
+    public int getCurrentRoomId() {
+        return currentRoomId;
+    }
+    
+    public void setCurrentRoomId(int roomId) {
+        this.currentRoomId = roomId;
     }
 
     public String getEmojiNiveau() {
