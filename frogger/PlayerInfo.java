@@ -1,6 +1,6 @@
 
 class PlayerInfo {
-    public static final int WIDTH = 10;
+    private static final int WIDTH = 10;
     private static final int HEIGHT = 10;
     private static final String FROG_TET = "🦎";
     private static final String FROG_CHAR = "🐸";
@@ -20,7 +20,6 @@ class PlayerInfo {
     boolean isPlaying;
     int cpt ;
     int niveau;
-    String rang;
     boolean isCarnivore;
     private Equipe equipe;
     

@@ -5,7 +5,6 @@ public class Arrivals {
     private static ArrayList<int[]> wPositions = new ArrayList<>();
 
     public static void addWPosition(int x, int y) {
-        // Vérifier si la position n'est pas déjà enregistrée
         if (!isWPosition(x, y)) {
             wPositions.add(new int[] { x, y });
         }
@@ -13,6 +12,10 @@ public class Arrivals {
 
     public static boolean GlobalWin() {
         return wPositions.size() >= totalArrivals;
+    }
+
+    public static ArrayList<int[]> getWPositions() {
+        return new ArrayList<>(wPositions); 
     }
 
     public static int getNbArrives(){

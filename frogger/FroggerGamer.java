@@ -13,9 +13,8 @@ public class FroggerGamer {
     private static final String TERRE_PLEIN_CHAR = "🌱";
     private static final String FROG_WIN = "🤴";
     private static final String DEPART_CHAR = "⬆️";
-    private static volatile int currentPlayers = 0; 
     public static int NbrPlayer =3; 
-    private static Map<Integer, SalleJeu> sallesJeu = new ConcurrentHashMap<>();
+    private static final Map<Integer, SalleJeu> sallesJeu = new ConcurrentHashMap<>();
     private static int nextsalleId = 1;
 
 
@@ -40,9 +39,9 @@ public class FroggerGamer {
     private static volatile boolean PartieStarted;
     
     // multijoueur
-    private static Map<Socket, ClientHandler> clients = new ConcurrentHashMap<>();
-    private static Map<Socket, PlayerInfo> players = new ConcurrentHashMap<>();
-    private static Map<Socket, Equipe> equipes = new ConcurrentHashMap<>();
+    private static final Map<Socket, ClientHandler> clients = new ConcurrentHashMap<>();
+    private static final Map<Socket, PlayerInfo> players = new ConcurrentHashMap<>();
+    private static final Map<Socket, Equipe> equipes = new ConcurrentHashMap<>();
     private static int nextPlayerId = 1;
     
 
@@ -79,6 +78,7 @@ public class FroggerGamer {
         }
         
         @Override
+        
         public void run() {
             try {
                 String message;
@@ -87,25 +87,27 @@ public class FroggerGamer {
                         Welcome(this);
                     } else if (message.equals("QUIT")) {
                         break;
-                    } else if (player.isPlaying) {
-              
-                            // try {
-                            //     int choice = Integer.parseInt(message);
-                            //     processMenuChoice(this, choice);
-                            // } catch (NumberFormatException e) {
-                            //     switch(message){
-
-                            //         case "y": afficherMenuPrincipalClient(this); break;
-                            //         case "n": break;
-
-                            //     }
-                                
-                                updatePlayer(player, message);
-                                checkCollisionForPlayer(player);
-                                    
-                                
-                            // }
-                        
+                    } else if (!player.isPlaying && !player.running) {
+                        if (player.lives <= 0) {
+                            if (message.equals("y")) {
+                                player.lives = LIVES_MAX;
+                                player.cpt = 0;
+                                player.isPlaying = true;
+                                player.running = true;
+                                // resetFrog(player, 0, HEIGHT - 1);
+                                OptionsSalle(this);
+                            } else if (message.equals("n")) {
+                                player.isPlaying = false;
+                                player.running = false;
+                                this.sendMessage("Au revoir !");
+                                OptionsSalle(this);
+                            }
+                        } 
+                    }
+                    else {
+                        // Traitement normal des mouvements
+                        updatePlayer(player, message);
+                        checkCollisionForPlayer(player);
                     }
                 }
             } catch (IOException e) {
@@ -137,7 +139,8 @@ public class FroggerGamer {
             case 1:
                 NbrPlayer = 1;
                 
-                startWaitingThread();
+                // startWaitingThread();
+                startGameForClient(client);
                 break;
            
             case 2:
@@ -152,75 +155,21 @@ public class FroggerGamer {
         }
     }
     
-    private static void startWaitingThread() {
-        new Thread(() -> {
-            while (!PartieStarted) {
-                int remainingPlayers = NbrPlayer - players.size();
-                if (remainingPlayers > 0) {
-                    sendAllMessage(" \n Patiente, il reste " + remainingPlayers + " joueur(s) avant de lancer la partie.");
-                } else {
-                    sendAllMessage("Tous les joueurs sont connectés. La partie commence maintenant !");
-                    startGameForAllClients();
-                    break;
-                }
-                pause(5000);
-            }
-        }).start();
-    }
-    private static void collaboCompet(ClientHandler client) {
-        try {
-            client.sendMessage("Choisissez un mode de jeu :");
-            client.sendMessage("1. ✊😈 Mode Collaboratif 😈✊");
-            client.sendMessage("2. 🥇 Mode Competition 🥇");
-            client.requestInput("Entrez votre choix (1 ou 2) : ");
-    
-            String message = client.input.readLine();
-            
-            switch (message) {
-                case "1":
-                    client.requestInput("Quel sera le nom de votre équipe ?: ");
-                    try {
-                        String nomEquipe = client.input.readLine();
-                        client.player.getEquipe().setNomEquipe(nomEquipe);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        client.sendMessage("Erreur lors de la lecture du nom de l'équipe.");
-                    }
-                    client.requestInput("Insérez le nombre de joueurs pour le mode collaboratif : ");
-                    try {
-                        NbrPlayer = Integer.parseInt(client.input.readLine());
-                        
-                        startWaitingThread();
-                        choisirJoueurMechant(); 
-                    } catch (NumberFormatException e) {
-                        client.sendMessage("Nombre de joueurs invalide. Utilisation de la valeur par défaut.");
-                        NbrPlayer = 3; 
-                    }
-                    
-                    break;
-                
-                case "2":
-                   
-                    client.requestInput("Insérez le nombre de joueurs pour le mode compétition : ");
-                    try {
-                        NbrPlayer = Integer.parseInt(client.input.readLine());
-                       
-                        
-                        startWaitingThread();
-                    } catch (NumberFormatException e) {
-                        client.sendMessage("Nombre de joueurs invalide. Utilisation de la valeur par défaut.");
-                        NbrPlayer = 3; 
-                    }
-                    break;
-                
-                default:
-                    client.sendMessage("Choix invalide. Retour au menu principal.");
-                    afficherMenuPrincipalClient(client);
-            }
-        } catch (IOException e) {
-            client.sendMessage("Erreur lors de la lecture de l'entrée : " + e.getMessage());
-            e.printStackTrace();
-        }}
+    // private static void startWaitingThread() {
+    //     new Thread(() -> {
+    //         while (!PartieStarted) {
+    //             int remainingPlayers = NbrPlayer - players.size();
+    //             if (remainingPlayers > 0) {
+    //                 sendAllMessage(" \n Patiente, il reste " + remainingPlayers + " joueur(s) avant de lancer la partie.");
+    //             } else {
+    //                 sendAllMessage("Tous les joueurs sont connectés. La partie commence maintenant !");
+    //                 startGameForClient(client);();
+    //                 break;
+    //             }
+    //             pause(5000);
+    //         }
+    //     }).start();
+    // }
 
     private static void afficherMenuPrincipalClient(ClientHandler client) {
         client.sendMessage("\n😊  Menu Principal ");
@@ -251,7 +200,7 @@ public class FroggerGamer {
         client.player.running=true;
         PlayerInfo player = players.get(client.socket);
         player.cpt=0;
-        if (player != null) {
+       
             player.isPlaying = true;
             player.lives = LIVES_MAX;
   
@@ -267,10 +216,68 @@ public class FroggerGamer {
                 }
             });
             gameThread.start();
-        }
+        
     }
     
+    // private static void renderForClient(ClientHandler client, PlayerInfo player) {
+    //     client.sendMessage("\033[H\033[2J");
+    //     System.out.flush();
+    //     StringBuilder sb = new StringBuilder();
+    //     sb.append("Vies restantes : ").append(player.lives).append(" | Équipe: ").append(player.getEquipe().getNomEquipe()).append("\n");
+    //     sb.append("Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer : ").append("\n");
+        
+    //     for (int y = 0; y < HEIGHT; y++) {
+    //         for (int x = 0; x < WIDTH; x++) {
+    //             if (Arrivals.isWPosition(x, y)) {
+    //                 sb.append(FROG_WIN);
+    //             } else if (y == 0) {
+    //                 if(x % 4 == 0) {
+    //                     sb.append(FINISH_LINE_CHAR);
+    //                 } else {
+    //                     sb.append(WALL_CHAR);
+    //                 }
+    //             } else if (getPlayerAt(x, y) != null) {
+    //                 sb.append(getPlayerAt(x, y).getEmojiNiveau());
+    //             }else if (y == HEIGHT / 2) {
+    //                 sb.append(TERRE_PLEIN_CHAR);
+    //             }  else if (isObstacleAt(x, y)) {
+    //                 boolean isObstacleA = false;
+    //                 for (Obstacle obs : obstaclesA) {
+    //                     if (obs.getX() == x && obs.getY() == y) {
+    //                         sb.append(obs.getCharA());  
+    //                         isObstacleA = true;
+    //                         break;
+    //                     }
+    //                 }
+                    
+    //                 if (!isObstacleA) {
+    //                     for (Obstacle obs : obstaclesB) {
+    //                         if (obs.getX() == x && obs.getY() == y) {
+    //                             sb.append(obs.getCharB());  
+    //                             break;
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //             else if (y <=4 && y != 0 && y != HEIGHT-1 )  {
+    //                 sb.append(WAVE_CHAR);
+    //             } 
+    //             else if ( y == HEIGHT-1 )  {
+    //                 sb.append(DEPART_CHAR);
+    //             }else {
+    //                 sb.append(ROAD_CHAR);
+    //             }
+    //             sb.append("\t");
+    //         }
+    //         sb.append("\n");
+    //     }
+    //     client.sendMessage(sb.toString());
+    // }
+    
     private static void renderForClient(ClientHandler client, PlayerInfo player) {
+        SalleJeu salle = getSalleJeuById(player.getCurrentsalleId());
+        if (salle == null) return;
+        
         client.sendMessage("\033[H\033[2J");
         System.out.flush();
         StringBuilder sb = new StringBuilder();
@@ -287,13 +294,13 @@ public class FroggerGamer {
                     } else {
                         sb.append(WALL_CHAR);
                     }
-                } else if (getPlayerAt(x, y) != null) {
-                    sb.append(getPlayerAt(x, y).getEmojiNiveau());
-                }else if (y == HEIGHT / 2) {
+                } else if (getPlayerAtInSalle(x, y, salle) != null) {
+                    sb.append(getPlayerAtInSalle(x, y, salle).getEmojiNiveau());
+                } else if (y == HEIGHT / 2) {
                     sb.append(TERRE_PLEIN_CHAR);
-                }  else if (isObstacleAt(x, y)) {
+                } else if (salle.isObstacleAt(x, y, salle)) {
                     boolean isObstacleA = false;
-                    for (Obstacle obs : obstaclesA) {
+                    for (Obstacle obs : salle.getObstaclesA()) {
                         if (obs.getX() == x && obs.getY() == y) {
                             sb.append(obs.getCharA());  
                             isObstacleA = true;
@@ -302,7 +309,7 @@ public class FroggerGamer {
                     }
                     
                     if (!isObstacleA) {
-                        for (Obstacle obs : obstaclesB) {
+                        for (Obstacle obs : salle.getObstaclesB()) {
                             if (obs.getX() == x && obs.getY() == y) {
                                 sb.append(obs.getCharB());  
                                 break;
@@ -325,13 +332,14 @@ public class FroggerGamer {
         client.sendMessage(sb.toString());
     }
     
-    private static boolean isPlayerAt(int x, int y, PlayerInfo currentPlayer) {
-        for (PlayerInfo player : players.values()) {
-            if (player != currentPlayer && player.frogX == x && player.frogY == y) {
-                return true;
+    // Nouvelle méthode pour obtenir un joueur à une position spécifique dans une salle donnée
+    public static PlayerInfo getPlayerAtInSalle(int x, int y, SalleJeu salle) {
+        for (PlayerInfo player : salle.players) {
+            if (player.frogX == x && player.frogY == y) {
+                return player;
             }
         }
-        return false;
+        return null;
     }
 
     public static PlayerInfo getPlayerAt(int x, int y) {
@@ -350,96 +358,88 @@ public class FroggerGamer {
             }
         }
     }
-
-
+    // private static void checkCollisionForPlayer(PlayerInfo player) {
+    //     ClientHandler client = getClientForPlayer(player);
+       
+    //     // Vérifier collisions avec autres joueurs
+    //     for (PlayerInfo otherPlayer : players.values()) {
+    //         if (player != otherPlayer) { 
+    //             MangerMiam(player, otherPlayer);
+    //         }
+    //     }
+    //     if (player.lives <= 0) {
+    //         return;
+    //     }
+    
+       
+    //     if (isObstacleAt(player.frogX, player.frogY)) {
+    //         player.lives--;
+    
+    //         client.sendMessage("\033[H\033[2J");
+    //         System.out.flush();
+            
+    //         client.sendMessage("💀 Un obstacle vous a écrasé ! Il vous reste " + player.lives + " vies. 💀");
+            
+    //         if (player.lives <= 0) {
+    //             GameOver(client);
+    //             client.sendMessage("Game Over ! Vous avez perdu toutes vos vies.");
+    //             player.isPlaying = false;
+    //             player.running = false;
+    //             askreplay(client);
+               
+    //         } else {
+    //             resetFrog(player, 0, HEIGHT - 1);
+    //         }
+    //     }
+    // }
     private static void checkCollisionForPlayer(PlayerInfo player) {
         ClientHandler client = getClientForPlayer(player);
+        SalleJeu salle = getSalleJeuById(player.getCurrentsalleId());
+        if (salle == null) return;
        
-        for (PlayerInfo otherPlayer : players.values()) {
+        // Vérifier collisions avec autres joueurs de la même salle
+        for (PlayerInfo otherPlayer : salle.players) {
             if (player != otherPlayer) { 
                 MangerMiam(player, otherPlayer);
             }
         }
-    
-        if (isObstacleAt(player.frogX, player.frogY)) {
+        if (player.lives <= 0) {
+            return;
+        }
+        
+        if (salle.isObstacleAt(player.frogX, player.frogY, salle)) {
             player.lives--;
     
             client.sendMessage("\033[H\033[2J");
             System.out.flush();
             
-            if (client != null) {
-                client.sendMessage("💀 Un obstacle vous a écrasé ! Il vous reste " + player.lives + " vies. 💀");
-            }
+            client.sendMessage("💀 Un obstacle vous a écrasé ! Il vous reste " + player.lives + " vies. 💀");
             
             if (player.lives <= 0) {
-                if (client != null) {
-                    client.sendMessage(GameOver());
-                    client.sendMessage("Game Over ! Vous avez perdu toutes vos vies.");
-                    player.isPlaying = false;
-                    askreplay(client);
-                    return;
-                }
+                GameOver(client);
+                client.sendMessage("Game Over ! Vous avez perdu toutes vos vies.");
+                player.isPlaying = false;
+                player.running = false;
+                // resetFrog(player, WIDTH, HEIGHT - 1);
+
+                askreplay(client);
+               
             } else {
-                resetFrog(player, 0 ,HEIGHT - 1);
+                resetFrog(player, 0, HEIGHT - 1);
             }
         }
-        
     }
-    
 
     private static void askreplay(ClientHandler client) {
-        new Thread(() -> {
-            client.requestInput("Voulez-vous rejouer ? (y/n) : ");
-            try {
-                String choix = client.input.readLine();
-                if(choix != null){
-                    switch (choix) {
-                        case "y":
-                            PlayerInfo player = players.get(client.socket);
-                            if (player != null) {
-                                player.running = false;
-                                player.isPlaying = false;
-                                player.lives = LIVES_MAX;
-                                player.cpt = 0;
-                                resetFrog(player, 0 ,HEIGHT - 1);
-                            }
-        
-                            boolean allPlayersInactive = true;
-                            for (PlayerInfo p : players.values()) {
-                                if (p.isPlaying && p.running) {
-                                    allPlayersInactive = false;
-                                    break;
-                                }
-                            }
-        
-                            if (allPlayersInactive) {
-                                PartieStarted = false;
-                                Arrivals.ClearwPositions();
-                            }
-        
-                            afficherMenuPrincipalClient(client);
-                            break;
-        
-                        case "n":
-                            client.sendMessage("Au revoir !");
-                            try {
-                                removeClient(client.socket);
-                                client.socket.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            break;
-        
-                        default:
-                            askreplay(client); 
-                    }
-
-                }
-                
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
+        try {
+            client.player.running = false;
+            // client.sendMessage("\033[H\033[2J");
+            client.sendMessage("Vous avez perdu! Voulez-vous rejouer ? (y/n) : ");
+            client.requestInput("Répondez par 'y' pour rejouer ou 'n' pour quitter : ");
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static void updatePlayer(PlayerInfo player, String move) {
@@ -469,23 +469,26 @@ public class FroggerGamer {
         
         checkCollisionForPlayer(player);
         if (player.frogY == 0 && player.frogX % 4 == 0) {
-            Arrivals.addWPosition(player.frogX, player.frogY);
+            SalleJeu salle = getSalleJeuById(player.getCurrentsalleId());
+            if (salle == null) return;
+            salle.getArrivals().addWPosition(player.frogX, player.frogY);
             ClientHandler client = getClientForPlayer(player);
             if (client != null) {
                 player.cpt++;
                 
-                sendAllMessage("🎉 Félicitations ! Un prince est apparu !");
+                notifysallePlayers(salle, "🎉 Félicitations ! Un prince est apparu !");
                 resetFrog(player, 0 ,HEIGHT - 1);
             }
             
             
-            if (Arrivals.GlobalWin()) {
+            if (salle.getArrivals().GlobalWin()) {
                 System.out.println("DEBUG: Victoire détectée !");
                 sendAllMessage("\033[H\033[2J");
                 System.out.flush();
-                player.isPlaying = false;
+                notifysallePlayers(salle, "🏆 TOUS les emplacements sont remplis ! LE JEU EST TERMINÉ ! 🏆");
+       
+                // player.isPlaying = false;
                 
-                sendAllMessage("🏆 TOUS les emplacements sont remplis ! LE JEU EST TERMINÉ ! 🏆");
                 PlayerInfo W = null;
                 int gagnant = -1;
                 
@@ -495,10 +498,11 @@ public class FroggerGamer {
                         W = p;
                     }
                 }
-                getClientForPlayer(W).sendMessage(goodJob());
+                // getClientForPlayer(W).sendMessage(goodJob());
                 
                 if (W!= null) {
-                    sendAllMessage("🎖️ L'équipe \""+ W.getEquipe().getNomEquipe() +"\" remporte la partie avec " + W.cpt + " arrivées ! 🎖️");
+                    getClientForPlayer(W).sendMessage(goodJob());
+                    notifysallePlayers(salle, "🎖️ L'équipe \""+ W.getEquipe().getNomEquipe() +"\" remporte la partie avec " + W.cpt + " arrivées ! 🎖️");
                 }
                 player.niveau+=player.cpt;
                 askreplay(client);
@@ -547,28 +551,28 @@ public class FroggerGamer {
     }
         
 
-        private static void startGameForAllClients() {
+        // private static void startGameForAllClients() {
             
-            PartieStarted = true;
-            Arrivals.ClearwPositions();
+        //     PartieStarted = true;
+        //     Arrivals.ClearwPositions();
             
-            for (PlayerInfo player : players.values()) {
-                player.isPlaying = false;
-                player.running = false;
-                player.lives = LIVES_MAX;
-                player.cpt = 0;
-            }
+        //     for (PlayerInfo player : players.values()) {
+        //         player.isPlaying = false;
+        //         player.running = false;
+        //         player.lives = LIVES_MAX;
+        //         player.cpt = 0;
+        //     }
             
-            sendAllMessage("La partie commence ! Bonne chance à tous !");
-            int i = 0;
+        //     sendAllMessage("La partie commence ! Bonne chance à tous !");
+        //     int i = 0;
             
-            for (ClientHandler client : clients.values()) {
-                client.player.frogX = i;
-                client.player.frogY = HEIGHT - 1;
-                startGameForClient(client);
-                i += 2;
-            }
-        }
+        //     for (ClientHandler client : clients.values()) {
+        //         client.player.frogX = i;
+        //         client.player.frogY = HEIGHT - 1;
+        //         startGameForClient(client);
+        //         i += 2;
+        //     }
+        // }
 
        
 
@@ -598,8 +602,8 @@ public class FroggerGamer {
     
 
     
-    private static String GameOver() {
-        return "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣠⡀⠀\n" +
+    private static void GameOver(ClientHandler client) {
+        client.sendMessage("⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣠⡀⠀\n" +
         "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⣤⠀⠀⠀⢀⣴⣿⡶⠀⣾⣿⣿⡿⠟⠛⠁\n" +
         "⠀⠀⠀⠀⠀⠀⣀⣀⣄⣀⠀⠀⠀⠀⣶⣶⣦⠀⠀⠀⠀⣼⣿⣿⡇⠀⣠⣿⣿⣿⠇⣸⣿⣿⣧⣤⠀⠀⠀\n" +
         "⠀⠀⢀⣴⣾⣿⡿⠿⠿⠿⠇⠀⠀⣸⣿⣿⣿⡆⠀⠀⢰⣿⣿⣿⣷⣼⣿⣿⣿⡿⢀⣿⣿⡿⠟⠛⠁⠀⠀\n" +
@@ -614,7 +618,8 @@ public class FroggerGamer {
         "⠀⠀⠀⣴⣿⣿⠋⠀⠀⠀⢸⣿⣇⢹⣿⣷⣰⣿⣿⠃⠀⢠⣿⣿⢃⣀⣤⣤⣾⣿⡟⠀⠀⠀⢻⣿⣆⠀⠀\n" +
         "⠀⠀⠀⣿⣿⡇⠀⠀⢀⣴⣿⣿⡟⠀⣿⣿⣿⣿⠃⠀⠀⣾⣿⣿⡿⠿⠛⢛⣿⡟⠀⠀⠀⠀⠀⠻⠿⠀⠀\n" +
         "⠀⠀⠀⠹⣿⣿⣶⣾⣿⣿⣿⠟⠁⠀⠸⢿⣿⠇⠀⠀⠀⠛⠛⠁⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀\n" +
-        "⠀⠀⠀⠀⠈⠙⠛⠛⠛⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀";
+        "⠀⠀⠀⠀⠈⠙⠛⠛⠛⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀");
+        
     }
     private static void Welcome(ClientHandler client) { 
         client.sendMessage( """
@@ -682,6 +687,7 @@ public class FroggerGamer {
             PlayerInfo player = players.get(client.socket);
             if (player != null) {
                 player.setCurrentsalleId(newsalle.getsalleId());
+                newsalle.addPlayer(player);  // Ajoutez cette ligne
                 
                 client.sendMessage("😊 "+salleName + "?  J'aime bien le nom ! Voici l'ID de votre salle : " + newsalle.getsalleId());
                 client.sendMessage("Vous êtes maintenant dans votre salle");
@@ -697,7 +703,7 @@ public class FroggerGamer {
     }
     
     private static void joinExistingsalle(ClientHandler client) {
-        // List available salles
+       
         if (sallesJeu.isEmpty()) {
             client.sendMessage("😊 Aucune salle n'est disponible. Veux tu créer une nouvelle salle.");
             OptionsSalle(client);
@@ -739,7 +745,7 @@ public class FroggerGamer {
                 return;
             }
             
-            // Add player to the roo
+            
             PlayerInfo player = players.get(client.socket);
             if (player != null) {
                 player.setCurrentsalleId(salle.getsalleId());
@@ -803,7 +809,7 @@ public class FroggerGamer {
                         salle.setGameMode(modeChoice == 1 ? "Collaboratif" : "Competition");
                         client.sendMessage("Le mode de jeu est  défini à : " + salle.getGameMode());
                     } catch (NumberFormatException e) {
-                        client.sendMessage("🫤 Choix invalide. On choisi pour vous Competition se sera.");
+                        client.sendMessage("🫤 Choix invalide. On choisi pour vous, Competition se sera.");
                         salle.setGameMode("Competition");
                     }
                     salleSetupOptions(client, salle);
@@ -812,11 +818,12 @@ public class FroggerGamer {
                 case "3":
                     if (salle.getCurrentPlayers() < 2) {
                         client.sendMessage("🫤  Il faut au moins 2 joueurs pour démarrer la partie.");
-                        client.sendMessage("En attente d'autres joueurs... (" + 
-                                salle.getCurrentPlayers() + "/" + salle.getMaxPlayers() + ")");
+                        // client.sendMessage("En attente d'autres joueurs... (" +  salle.getCurrentPlayers() + "/" + salle.getMaxPlayers() + ")");
                                 
                         startsalleWaitingThread(salle);
+                        
                     } else {
+                        
                         startGameForsalle(salle);
                     }
                     break;
@@ -838,12 +845,16 @@ public class FroggerGamer {
     private static void startsalleWaitingThread(SalleJeu salle) {
         new Thread(() -> {
             while (!salle.isGameStarted() && salle.getCurrentPlayers() < salle.getMaxPlayers()) {
-                notifysallePlayers(salle, "😪⌚ En attente de joueurs... (" + 
-                        salle.getCurrentPlayers() + "/" + salle.getMaxPlayers() + ")");
+                notifysallePlayers(salle, "😪⌚ En attente de joueurs... (" +   salle.getCurrentPlayers() + "/" + salle.getMaxPlayers() + ")");
                 pause(5000);
+                if(salle.getGameMode().equals("Collaboratif")) {
+                    salle.equipes.clear();
+                    salle.JoueursPourEquipe();
+                }
             }
             
             if (!salle.isGameStarted() && salle.getCurrentPlayers() >= salle.getMaxPlayers()) {
+                
                 notifysallePlayers(salle, " 😊 A vos marques pret? La partie va commencer !!!");
                 startGameForsalle(salle);
             }
@@ -868,7 +879,7 @@ public class FroggerGamer {
         
         notifysallePlayers(salle, "😊 La partie commence dans la salle : " + salle.getsalleName() + " !");
         int i = 0;
-        for (PlayerInfo player : players.values()) {
+        for (PlayerInfo player : salle.players) {
             if (player.getCurrentsalleId() == salle.getsalleId()) {
                 ClientHandler client = getClientForPlayer(player);
                 if (client != null) {
@@ -892,11 +903,11 @@ public class FroggerGamer {
         }
         
         if (salle.getGameMode().equals("Collaboratif")) {
-            chooseEvilPlayerForsalle(salle);
+            chooseMechantPlayerForsalle(salle);
         }
     }
     
-    private static void chooseEvilPlayerForsalle(SalleJeu salle) {
+    private static void chooseMechantPlayerForsalle(SalleJeu salle) {
         List<PlayerInfo> sallePlayers = new ArrayList<>();
         
         for (PlayerInfo player : players.values()) {
@@ -943,10 +954,11 @@ public class FroggerGamer {
 
                 if (p2.lives <= 0) {
                     if (cP2 != null) {
-                        cP2.sendMessage(GameOver());
+                        GameOver(cP2);
                         cP2.sendMessage("Game Over ! Vous avez perdu toutes vos vies.");
                         p2.isPlaying = false;
                         askreplay(cP2);
+
                         return;
                     }
                 }
@@ -963,7 +975,7 @@ public class FroggerGamer {
                 cP1.sendMessage("Vous vous êtes fait manger");
                 if (p1.lives <= 0) {
                     if (cP1 != null) {
-                        cP1.sendMessage(GameOver());
+                        GameOver(cP1);
                         cP1.sendMessage("Game Over ! Vous avez perdu toutes vos vies.");
                         p1.isPlaying = false;
                         askreplay(cP1);

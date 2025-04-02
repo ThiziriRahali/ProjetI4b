@@ -1,30 +1,31 @@
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class SalleJeu {
-    private int salleId;
-    private String salleName;
+    private final int salleId;
+    private final String salleName;
     private int maxPlayers;
-    private int currentPlayers;
+
     private boolean gameStarted;
-    private String gameMode; // "Collaboratif" or "Competition"
-    private List<PlayerInfo> players;
+    private String gameMode;
+    public final List<PlayerInfo> players;
     private Obstacle[] obstaclesA;
     private Obstacle[] obstaclesB;
     private Arrivals arrivals;
-    private static final int WIDTH = 10;
     private static final int HEIGHT = 10;
+    private int currentPlayers;
+    public List<Equipe> equipes;
 
     public SalleJeu(int salleId, String salleName) {
         this.salleId = salleId;
         this.salleName = salleName;
-        this.maxPlayers = 4; // Default max players
+        this.maxPlayers = 4; 
         this.currentPlayers = 0;
         this.gameStarted = false;
-        this.gameMode = "Competition"; // Default game mode
+        this.gameMode = "Competition"; 
         this.players = new ArrayList<>();
         this.arrivals = new Arrivals();
+        this.equipes = new ArrayList<>();
     }
 
     public int getsalleId() {
@@ -37,6 +38,14 @@ public class SalleJeu {
 
     public int getMaxPlayers() {
         return maxPlayers;
+    }
+
+    public Obstacle[] getObstaclesA() {
+        return obstaclesA;
+    }
+    
+    public Obstacle[] getObstaclesB() {
+        return obstaclesB;
     }
 
     public void setMaxPlayers(int maxPlayers) {
@@ -63,14 +72,14 @@ public class SalleJeu {
         this.gameMode = gameMode;
     }
 
-    public void addPlayer(PlayerInfo player) {
+    void addPlayer(PlayerInfo player) {
         if (!players.contains(player)) {
             players.add(player);
             currentPlayers++;
         }
     }
 
-    public void removePlayer(PlayerInfo player) {
+    void removePlayer(PlayerInfo player) {
         if (players.contains(player)) {
             players.remove(player);
             currentPlayers--;
@@ -95,30 +104,27 @@ public class SalleJeu {
         arrivals.ClearwPositions();
     }
 
-    public boolean isObstacleAt(int x, int y) {
-        if (obstaclesA == null || obstaclesB == null) {
-            return false;
-        }
-        
-        for (Obstacle obs : obstaclesA) {
-            if (obs.getX() == x && obs.getY() == y) {
-                return true;
-            }
-        }
-        
-        for (Obstacle obs : obstaclesB) {
-            if (obs.getX() == x && obs.getY() == y) {
-                return true;
-            }
-        }
-        
+  public static boolean isObstacleAt(int x, int y, SalleJeu salle) {
+    if (salle == null || salle.getObstaclesA() == null || salle.getObstaclesB() == null) {
         return false;
     }
+    
+    for (Obstacle obs : salle.getObstaclesA()) {
+        if (obs.getX() == x && obs.getY() == y) {
+            return true;
+        }
+    }
+    for (Obstacle obs : salle.getObstaclesB()) {
+        if (obs.getX() == x && obs.getY() == y) {
+            return true;
+        }
+    }
+    return false;
+}
 
     public void stopGame() {
         gameStarted = false;
-        
-        // Stop all obstacles
+      
         if (obstaclesA != null) {
             for (Obstacle obs : obstaclesA) {
                 if (obs != null) {
@@ -139,4 +145,33 @@ public class SalleJeu {
     public Arrivals getArrivals() {
         return arrivals;
     }
+
+    public void JoueursPourEquipe() {
+        if (equipes.isEmpty()) {
+            Equipe equipe1 = new Equipe(1, "Les Crap'Ôs", null);
+            Equipe equipe2 = new Equipe(2, "Les Croâssants", null);
+            equipes.add(equipe1);
+            equipes.add(equipe2);
+        }
+    
+        Equipe equipe1 = equipes.get(0);
+        Equipe equipe2 = equipes.get(1);
+    
+        boolean pasToi = true; 
+        for (PlayerInfo player : players) {
+            if (pasToi) {
+                equipe1.addJoueur(player);
+                player.setEquipe(equipe1);
+            } else {
+                equipe2.addJoueur(player);
+                player.setEquipe(equipe2);
+            }
+            pasToi = !pasToi; 
+        }
+    
+        System.out.println("Répartition terminée :");
+        System.out.println("Équipe 1 : " + equipe1.getNomEquipe() + " (" + equipe1.getNbJoueurs() + " joueurs)");
+        System.out.println("Équipe 2 : " + equipe2.getNomEquipe() + " (" + equipe2.getNbJoueurs() + " joueurs)");
+    }
+
 }

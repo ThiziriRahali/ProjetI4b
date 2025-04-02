@@ -1,7 +1,6 @@
 import java.io.*;
 import java.net.*;
 import java.util.Scanner;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FroggerClient {
     private static final Scanner scanner = new Scanner(System.in);
@@ -27,7 +26,6 @@ public class FroggerClient {
                 try {
                     String message;
                     while (running && (message = input.readLine()) != null) {
-                        // Si message est demande de saisie, ne pas afficher
                         if (message.startsWith("INPUT:")) {
                             String prompt = message.substring(6);
                             System.out.println(prompt);
@@ -56,7 +54,6 @@ public class FroggerClient {
             while (running && (userInput = scanner.nextLine()) != null) {
                 output.println(userInput);
                 
-                // Si l'utilisateur veut quitter
                 if (userInput.equals("QUIT") || userInput.equals("x")) {
                     running = false;
                     break;

@@ -2,11 +2,12 @@
 import java.util.*;
 
 class Obstacle extends Thread {
+
+   
     private int x;
-    private int y;
+    private final int y;
     private boolean active = true;
-    public static final int WIDTH = 10;
-    private static final int HEIGHT = 10;
+    private static final int WIDTH = 10;
     private static final String OBSTACLE_CHARA = "🚣";
     private static final String OBSTACLE_CHARB = "🦅";
     public static final String FINISH_LINE_CHAR = "🏁";
@@ -15,7 +16,7 @@ class Obstacle extends Thread {
         this.x = x;
         this.y = y;
     }
-    
+    @Override
     public void run() {
         Random rand = new Random();
         while (active) {
@@ -30,6 +31,9 @@ class Obstacle extends Thread {
                 
             }
         }
+    }
+    public static int getWIDTH() {
+        return WIDTH;
     }
     
     private void moveObstacle() {
@@ -50,7 +54,7 @@ class Obstacle extends Thread {
 
     public int getX() { return x; }
     public int getY() { return y; }
-    public static String getCharA() { return OBSTACLE_CHARA; }
-    public static String getCharB() { return OBSTACLE_CHARB; }
+    public String getCharA() { return OBSTACLE_CHARA; }
+    public String getCharB() { return OBSTACLE_CHARB; }
 
 }

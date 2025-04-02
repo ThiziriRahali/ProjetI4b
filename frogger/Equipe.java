@@ -1,7 +1,7 @@
 import java.util.*;
 
 class Equipe {
-    private int idEquipe;
+    private final int idEquipe;
     private String nomEquipe;
     private int score;
     private ArrayList<PlayerInfo> joueurs;
