@@ -2,7 +2,6 @@ import java.io.*;
 import java.net.*;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
-import frogger.*;
 
 public class FroggerClient {
     private static final Scanner scanner = new Scanner(System.in);

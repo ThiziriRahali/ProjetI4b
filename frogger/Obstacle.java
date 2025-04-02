@@ -1,4 +1,4 @@
-import frogger.*;
+
 import java.util.*;
 
 class Obstacle extends Thread {
