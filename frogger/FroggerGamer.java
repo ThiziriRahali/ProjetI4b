@@ -16,17 +16,17 @@ public class FroggerGamer {
     private static volatile int currentPlayers = 0; 
     public static int NbrPlayer =3; 
     private static Map<Integer, SalleJeu> sallesJeu = new ConcurrentHashMap<>();
-    private static int nextRoomId = 1;
+    private static int nextsalleId = 1;
 
 
-    private static synchronized SalleJeu createSalleJeu(String roomName) {
-        SalleJeu salle = new SalleJeu(nextRoomId++, roomName);
-        sallesJeu.put(salle.getRoomId(), salle);
+    private static synchronized SalleJeu createSalleJeu(String salleName) {
+        SalleJeu salle = new SalleJeu(nextsalleId++, salleName);
+        sallesJeu.put(salle.getsalleId(), salle);
         return salle;
     }
 
-    private static SalleJeu getSalleJeuById(int roomId) {
-        return sallesJeu.get(roomId);
+    private static SalleJeu getSalleJeuById(int salleId) {
+        return sallesJeu.get(salleId);
     }
 
 
@@ -139,23 +139,11 @@ public class FroggerGamer {
                 
                 startWaitingThread();
                 break;
+           
             case 2:
-                
-                try {
-                    
-                    collaboCompet(client);
-
-                    
-                    
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                
-                break; 
-            case 3:
                 parametrerJeuClient(client);
                 break;
-            case 4:
+            case 3:
                 client.sendMessage("Déconnexion...");
                 break;
             default:
@@ -169,7 +157,7 @@ public class FroggerGamer {
             while (!PartieStarted) {
                 int remainingPlayers = NbrPlayer - players.size();
                 if (remainingPlayers > 0) {
-                    sendAllMessage(" \n Veuillez patienter, il reste " + remainingPlayers + " joueur(s) avant de lancer la partie.");
+                    sendAllMessage(" \n Patiente, il reste " + remainingPlayers + " joueur(s) avant de lancer la partie.");
                 } else {
                     sendAllMessage("Tous les joueurs sont connectés. La partie commence maintenant !");
                     startGameForAllClients();
@@ -235,11 +223,10 @@ public class FroggerGamer {
         }}
 
     private static void afficherMenuPrincipalClient(ClientHandler client) {
-        client.sendMessage("\n=== Menu Principal ===");
-        client.sendMessage("1. Mode Solo");
-        client.sendMessage("2. Mode Multijoueur");
-        client.sendMessage("3. Paramètres");
-        client.sendMessage("4. Quitter");
+        client.sendMessage("\n😊  Menu Principal ");
+        client.sendMessage("1.🚶 Mode Solo");
+        client.sendMessage("2. ⚙️ Paramètres ⚙️");
+        client.sendMessage("3. Quitter");
         client.requestInput("Veuillez choisir une option : ");
         try {
 
@@ -639,12 +626,13 @@ public class FroggerGamer {
             ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░     ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░        
              ░▒▓█████████████▓▒░░▒▓████████▓▒░▒▓████████▓▒░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░ 
             """);
-            client.sendMessage("Êtes-vous prêt à jouer ? (o/n) : ");
+            client.sendMessage("😊 Coucou je suis Anne TiVirus, ton assitante sur le jeu ! Je remplace mon mari Jean TiVirus qui est malade, je crois qu'il a un virus ");
+            client.sendMessage("😊 Es-tu prêt à jouer ? (o/n) : ");
             try {
                 String message = client.input.readLine();
                 switch (message) {
                     case "o":
-                        offerRoomOptions(client);
+                        OptionsSalle(client);
                         break;
                     default:
                         break;
@@ -654,28 +642,28 @@ public class FroggerGamer {
             }
         }
         
-        private static void offerRoomOptions(ClientHandler client) {
-            client.sendMessage("\n=== Gestion des Salles ===");
-            client.sendMessage("1. Créer une nouvelle salle de jeu");
-            client.sendMessage("2. Rejoindre une salle existante");
-            client.sendMessage("3. Retour au menu principal");
-            client.requestInput("Veuillez choisir une option : ");
+        private static void OptionsSalle(ClientHandler client) {
+            client.sendMessage("\n😊 LES OPTIONS DONT TU DISPOSES 🏠");
+            client.sendMessage("1. Créer une nouvelle salle de jeu 🏠✨");
+            client.sendMessage("2. Rejoindre une salle existante 🏘️");
+            client.sendMessage("3.  🤐 Mode secret");
+            client.requestInput("😊  Choisis une option : ");
             
             try {
                 String choice = client.input.readLine();
                 switch (choice) {
                     case "1":
-                        createNewRoom(client);
+                        createNewsalle(client);
                         break;
                     case "2":
-                        joinExistingRoom(client);
+                        joinExistingsalle(client);
                         break;
                     case "3":
                         afficherMenuPrincipalClient(client);
                         break;
                     default:
-                        client.sendMessage("Choix invalide. Veuillez réessayer.");
-                        offerRoomOptions(client);
+                        client.sendMessage("🫤 le choix est invalide.Réessaie.");
+                        OptionsSalle(client);
                         break;
                 }
             } catch (IOException e) {
@@ -684,162 +672,162 @@ public class FroggerGamer {
         
         
     }
-    private static void createNewRoom(ClientHandler client) {
-        client.requestInput("Entrez un nom pour votre salle de jeu : ");
+    private static void createNewsalle(ClientHandler client) {
+        client.requestInput(" 😊 Entre un nom pour ta salle de jeu : 😊");
         try {
-            String roomName = client.input.readLine();
-            SalleJeu newRoom = createSalleJeu(roomName);
+            String salleName = client.input.readLine();
+            SalleJeu newsalle = createSalleJeu(salleName);
             
-            // Associate player with this room
+            // Associate player with this salle
             PlayerInfo player = players.get(client.socket);
             if (player != null) {
-                player.setCurrentRoomId(newRoom.getRoomId());
+                player.setCurrentsalleId(newsalle.getsalleId());
                 
-                client.sendMessage("Salle créée avec succès ! ID de la salle : " + newRoom.getRoomId());
-                client.sendMessage("Vous êtes maintenant dans la salle : " + roomName);
+                client.sendMessage("😊 "+salleName + "?  J'aime bien le nom ! Voici l'ID de votre salle : " + newsalle.getsalleId());
+                client.sendMessage("Vous êtes maintenant dans votre salle");
                 
-                // Setup room waiting
-                roomSetupOptions(client, newRoom);
+                // Setup salle waiting
+                salleSetupOptions(client, newsalle);
             }
         } catch (IOException e) {
             e.printStackTrace();
-            client.sendMessage("Erreur lors de la création de la salle.");
-            offerRoomOptions(client);
+            client.sendMessage(" 🫤 Erreur lors de la création de la salle. 🫤");
+            OptionsSalle(client);
         }
     }
     
-    private static void joinExistingRoom(ClientHandler client) {
-        // List available rooms
+    private static void joinExistingsalle(ClientHandler client) {
+        // List available salles
         if (sallesJeu.isEmpty()) {
-            client.sendMessage("Aucune salle disponible. Veuillez créer une nouvelle salle.");
-            offerRoomOptions(client);
+            client.sendMessage("😊 Aucune salle n'est disponible. Veux tu créer une nouvelle salle.");
+            OptionsSalle(client);
             return;
         }
         
-        client.sendMessage("\n=== Salles Disponibles ===");
-        for (SalleJeu room : sallesJeu.values()) {
-            if (!room.isGameStarted() && room.getCurrentPlayers() < room.getMaxPlayers()) {
-                client.sendMessage(room.getRoomId() + ". " + room.getRoomName() + 
-                        " (" + room.getCurrentPlayers() + "/" + room.getMaxPlayers() + " joueurs)");
+        client.sendMessage("\n🏘️  Salles Disponibles 🏘️");
+        for (SalleJeu salle : sallesJeu.values()) {
+            if (!salle.isGameStarted() && salle.getCurrentPlayers() < salle.getMaxPlayers()) 
+            {
+                client.sendMessage(salle.getsalleId() + ". " + salle.getsalleName() +  "\t 😒 ne juge pas le nom il est horrible j'ai essayé de le lui dire... (" + salle.getCurrentPlayers() + "/" + salle.getMaxPlayers() + " joueurs)");
             }
         }
         
-        client.requestInput("Entrez l'ID de la salle que vous souhaitez rejoindre (ou 0 pour revenir) : ");
+        client.requestInput("😊 Entre l'ID de la salle que tu souhaite rejoindre (ou 0 pour revenir en arrière) : ");
         try {
-            int roomId = Integer.parseInt(client.input.readLine());
-            if (roomId == 0) {
-                offerRoomOptions(client);
+            int salleId = Integer.parseInt(client.input.readLine());
+            if (salleId == 0) {
+                OptionsSalle(client);
                 return;
             }
             
-            SalleJeu room = getSalleJeuById(roomId);
-            if (room == null) {
-                client.sendMessage("ID de salle invalide. Veuillez réessayer.");
-                joinExistingRoom(client);
+            SalleJeu salle = getSalleJeuById(salleId);
+            if (salle == null) {
+                client.sendMessage("🫤 l'ID de salle est invalide. réessaye.");
+                joinExistingsalle(client);
                 return;
             }
             
-            if (room.isGameStarted()) {
-                client.sendMessage("Cette partie a déjà commencé. Veuillez choisir une autre salle.");
-                joinExistingRoom(client);
+            if (salle.isGameStarted()) {
+                client.sendMessage("🫤 Cette partie a déjà commencé. Choisis une autre salle.");
+                joinExistingsalle(client);
                 return;
             }
             
-            if (room.getCurrentPlayers() >= room.getMaxPlayers()) {
-                client.sendMessage("Cette salle est pleine. Veuillez choisir une autre salle.");
-                joinExistingRoom(client);
+            if (salle.getCurrentPlayers() >= salle.getMaxPlayers()) {
+                client.sendMessage(" 🫤 Cette salle est pleine. Choisis une autre salle.");
+                joinExistingsalle(client);
                 return;
             }
             
             // Add player to the roo
             PlayerInfo player = players.get(client.socket);
             if (player != null) {
-                player.setCurrentRoomId(room.getRoomId());
-                room.addPlayer(player);
+                player.setCurrentsalleId(salle.getsalleId());
+                salle.addPlayer(player);
                 
-                client.sendMessage("Vous avez rejoint la salle : " + room.getRoomName());
+                client.sendMessage("😊 Tu as rejoint la salle : " + salle.getsalleName());
                 
-                notifyRoomPlayers(room, "Joueur " + player.id + " a rejoint la salle !");
+                notifysallePlayers(salle, "Joueur " + player.id + " a rejoint la salle! Soyez sympas avec lui");
                 
-                if (room.getCurrentPlayers() >= room.getMaxPlayers()) {
-                    notifyRoomPlayers(room, "La salle est pleine. La partie va commencer !");
-                    startGameForRoom(room);
+                if (salle.getCurrentPlayers() >= salle.getMaxPlayers()) {
+                    notifysallePlayers(salle, "😁 A vos marques pret? La partie va commencer !!!");
+                    startGameForsalle(salle);
                 } else {
-                    client.sendMessage("En attente d'autres joueurs... (" + 
-                            room.getCurrentPlayers() + "/" + room.getMaxPlayers() + ")");
+                    client.sendMessage("😪⌚ On attend les autres... (" + 
+                            salle.getCurrentPlayers() + "/" + salle.getMaxPlayers() + ")");
                 }
             }
         } catch (NumberFormatException e) {
-            client.sendMessage("ID de salle invalide. Veuillez entrer un nombre.");
-            joinExistingRoom(client);
+            client.sendMessage("🫤 l'ID de salle est invalide.Réessaie.");
+            joinExistingsalle(client);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
     
-    private static void roomSetupOptions(ClientHandler client, SalleJeu room) {
-        client.sendMessage("\n=== Configuration de la Salle ===");
-        client.sendMessage("1. Définir le nombre maximum de joueurs");
-        client.sendMessage("2. Choisir le mode de jeu (Collaboratif/Compétition)");
-        client.sendMessage("3. Démarrer la partie");
-        client.sendMessage("4. Retour au menu des salles");
-        client.requestInput("Veuillez choisir une option : ");
+    private static void salleSetupOptions(ClientHandler client, SalleJeu salle) {
+        client.sendMessage("\n🏚️ Configuration de la Salle 🏚️");
+        client.sendMessage("1.🤼 Définir le nombre maximum de joueurs 🤼");
+        client.sendMessage("2.🕹️ Choisir le mode de jeu (Collaboratif/Compétition)🕹️");
+        client.sendMessage("3. 🚩 Démarrer la partie 🚩");
+        client.sendMessage("4. 🔙 Retour au menu des salles");
+        client.requestInput("😊 Veuillez choisir une option : ");
         
         try {
             String choice = client.input.readLine();
             switch (choice) {
                 case "1":
-                    client.requestInput("Entrez le nombre maximum de joueurs (2-10) : ");
+                    client.requestInput("😊 Entrez le nombre maximum de joueurs (2-10) : ");
                     try {
                         int maxPlayers = Integer.parseInt(client.input.readLine());
-                        if (maxPlayers >= 2 && maxPlayers <= 10) {
-                            room.setMaxPlayers(maxPlayers);
-                            client.sendMessage("Nombre maximum de joueurs défini à " + maxPlayers);
+                        if (maxPlayers >= 1 && maxPlayers <= 10) {
+                            salle.setMaxPlayers(maxPlayers);
+                            client.sendMessage(" 😊 Nombre maximum de joueurs est défini à " + maxPlayers);
                         } else {
-                            client.sendMessage("Nombre invalide. Veuillez entrer un nombre entre 2 et 10.");
+                            client.sendMessage("🫤 Nombre invalide. ");
                         }
                     } catch (NumberFormatException e) {
-                        client.sendMessage("Entrée invalide. Veuillez entrer un nombre.");
+                        client.sendMessage("🫤 Concentre toi choisis un nombre!.");
                     }
-                    roomSetupOptions(client, room);
+                    salleSetupOptions(client, salle);
                     break;
                     
                 case "2":
-                    client.sendMessage("Choisissez un mode de jeu :");
-                    client.sendMessage("1. Mode Collaboratif");
-                    client.sendMessage("2. Mode Competition");
-                    client.requestInput("Entrez votre choix (1 ou 2) : ");
+                    client.sendMessage("😊 Choisissez un mode de jeu :");
+                    client.sendMessage(" 👬 1. Mode Collaboratif 👬");
+                    client.sendMessage("🤼 2. Mode Competition 🤼 ");
+                    client.requestInput("😊 Entrez votre choix (1 ou 2) : ");
                     
                     try {
                         int modeChoice = Integer.parseInt(client.input.readLine());
-                        room.setGameMode(modeChoice == 1 ? "Collaboratif" : "Competition");
-                        client.sendMessage("Mode de jeu défini à : " + room.getGameMode());
+                        salle.setGameMode(modeChoice == 1 ? "Collaboratif" : "Competition");
+                        client.sendMessage("Le mode de jeu est  défini à : " + salle.getGameMode());
                     } catch (NumberFormatException e) {
-                        client.sendMessage("Choix invalide. Mode par défaut (Competition) utilisé.");
-                        room.setGameMode("Competition");
+                        client.sendMessage("🫤 Choix invalide. On choisi pour vous Competition se sera.");
+                        salle.setGameMode("Competition");
                     }
-                    roomSetupOptions(client, room);
+                    salleSetupOptions(client, salle);
                     break;
                     
                 case "3":
-                    if (room.getCurrentPlayers() < 2) {
-                        client.sendMessage("Il faut au moins 2 joueurs pour démarrer la partie.");
+                    if (salle.getCurrentPlayers() < 2) {
+                        client.sendMessage("🫤  Il faut au moins 2 joueurs pour démarrer la partie.");
                         client.sendMessage("En attente d'autres joueurs... (" + 
-                                room.getCurrentPlayers() + "/" + room.getMaxPlayers() + ")");
+                                salle.getCurrentPlayers() + "/" + salle.getMaxPlayers() + ")");
                                 
-                        startRoomWaitingThread(room);
+                        startsalleWaitingThread(salle);
                     } else {
-                        startGameForRoom(room);
+                        startGameForsalle(salle);
                     }
                     break;
                     
                 case "4":
-                    offerRoomOptions(client);
+                    OptionsSalle(client);
                     break;
                     
                 default:
-                    client.sendMessage("Choix invalide. Veuillez réessayer.");
-                    roomSetupOptions(client, room);
+                    client.sendMessage("🫤  Choix invalide. Réessaie.");
+                    salleSetupOptions(client, salle);
                     break;
             }
         } catch (IOException e) {
@@ -847,24 +835,24 @@ public class FroggerGamer {
         }
     }
     
-    private static void startRoomWaitingThread(SalleJeu room) {
+    private static void startsalleWaitingThread(SalleJeu salle) {
         new Thread(() -> {
-            while (!room.isGameStarted() && room.getCurrentPlayers() < room.getMaxPlayers()) {
-                notifyRoomPlayers(room, "En attente de joueurs... (" + 
-                        room.getCurrentPlayers() + "/" + room.getMaxPlayers() + ")");
+            while (!salle.isGameStarted() && salle.getCurrentPlayers() < salle.getMaxPlayers()) {
+                notifysallePlayers(salle, "😪⌚ En attente de joueurs... (" + 
+                        salle.getCurrentPlayers() + "/" + salle.getMaxPlayers() + ")");
                 pause(5000);
             }
             
-            if (!room.isGameStarted() && room.getCurrentPlayers() >= room.getMaxPlayers()) {
-                notifyRoomPlayers(room, "Nombre de joueurs atteint ! La partie va commencer.");
-                startGameForRoom(room);
+            if (!salle.isGameStarted() && salle.getCurrentPlayers() >= salle.getMaxPlayers()) {
+                notifysallePlayers(salle, " 😊 A vos marques pret? La partie va commencer !!!");
+                startGameForsalle(salle);
             }
         }).start();
     }
     
-    private static void notifyRoomPlayers(SalleJeu room, String message) {
+    private static void notifysallePlayers(SalleJeu salle, String message) {
         for (PlayerInfo player : players.values()) {
-            if (player.getCurrentRoomId() == room.getRoomId()) {
+            if (player.getCurrentsalleId() == salle.getsalleId()) {
                 ClientHandler client = getClientForPlayer(player);
                 if (client != null) {
                     client.sendMessage(message);
@@ -873,15 +861,15 @@ public class FroggerGamer {
         }
     }
     
-    private static void startGameForRoom(SalleJeu room) {
-        room.setGameStarted(true);
+    private static void startGameForsalle(SalleJeu salle) {
+        salle.setGameStarted(true);
         
-        room.initializeGame();
+        salle.initializeGame();
         
-        notifyRoomPlayers(room, "La partie commence dans la salle : " + room.getRoomName() + " !");
+        notifysallePlayers(salle, "😊 La partie commence dans la salle : " + salle.getsalleName() + " !");
         int i = 0;
         for (PlayerInfo player : players.values()) {
-            if (player.getCurrentRoomId() == room.getRoomId()) {
+            if (player.getCurrentsalleId() == salle.getsalleId()) {
                 ClientHandler client = getClientForPlayer(player);
                 if (client != null) {
                     player.isPlaying = true;
@@ -892,7 +880,7 @@ public class FroggerGamer {
                     i += 2;
                     
                     Thread gameThread = new Thread(() -> {
-                        while (player.isPlaying && player.running && room.isGameStarted()) {
+                        while (player.isPlaying && player.running && salle.isGameStarted()) {
                             renderForClient(client, player);
                             client.requestMove();
                             pause(10);
@@ -903,23 +891,23 @@ public class FroggerGamer {
             }
         }
         
-        if (room.getGameMode().equals("Collaboratif")) {
-            chooseEvilPlayerForRoom(room);
+        if (salle.getGameMode().equals("Collaboratif")) {
+            chooseEvilPlayerForsalle(salle);
         }
     }
     
-    private static void chooseEvilPlayerForRoom(SalleJeu room) {
-        List<PlayerInfo> roomPlayers = new ArrayList<>();
+    private static void chooseEvilPlayerForsalle(SalleJeu salle) {
+        List<PlayerInfo> sallePlayers = new ArrayList<>();
         
         for (PlayerInfo player : players.values()) {
-            if (player.getCurrentRoomId() == room.getRoomId()) {
-                roomPlayers.add(player);
+            if (player.getCurrentsalleId() == salle.getsalleId()) {
+                sallePlayers.add(player);
             }
         }
         
-        if (!roomPlayers.isEmpty()) {
+        if (!sallePlayers.isEmpty()) {
             Random random = new Random();
-            PlayerInfo mechant = roomPlayers.get(random.nextInt(roomPlayers.size()));
+            PlayerInfo mechant = sallePlayers.get(random.nextInt(sallePlayers.size()));
             
             mechant.isCarnivore = true;
             ClientHandler clientMechant = getClientForPlayer(mechant);
@@ -928,7 +916,7 @@ public class FroggerGamer {
                 clientMechant.sendMessage("😈 Vous avez été choisi comme le joueur méchant !");
             }
             
-            notifyRoomPlayers(room, "Un joueur méchant a été désigné ! Faites attention !");
+            notifysallePlayers(salle, "Un joueur méchant a été désigné ! Faites attention !");
         }
     }
 

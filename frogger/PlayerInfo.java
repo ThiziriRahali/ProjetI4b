@@ -9,7 +9,7 @@ class PlayerInfo {
     private static final int LIVES_MAX = 3;
     private static final String FROG_PRINCESS = "👸";
     private static final String FROG_MEAN = "😈";
-    private int currentRoomId;
+    private int currentsalleId;
 
     public boolean running= true;
     int id;
@@ -34,7 +34,7 @@ class PlayerInfo {
         this.equipe = equipe;
         this.id = id;
         this.isCarnivore = isCarnivore;
-        this.currentRoomId = -1;
+        this.currentsalleId = -1;
         initPlayer();
     }
 
@@ -57,12 +57,12 @@ class PlayerInfo {
         }
     }
      
-    public int getCurrentRoomId() {
-        return currentRoomId;
+    public int getCurrentsalleId() {
+        return currentsalleId;
     }
     
-    public void setCurrentRoomId(int roomId) {
-        this.currentRoomId = roomId;
+    public void setCurrentsalleId(int salleId) {
+        this.currentsalleId = salleId;
     }
 
     public String getEmojiNiveau() {

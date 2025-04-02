@@ -3,8 +3,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SalleJeu {
-    private int roomId;
-    private String roomName;
+    private int salleId;
+    private String salleName;
     private int maxPlayers;
     private int currentPlayers;
     private boolean gameStarted;
@@ -16,9 +16,9 @@ public class SalleJeu {
     private static final int WIDTH = 10;
     private static final int HEIGHT = 10;
 
-    public SalleJeu(int roomId, String roomName) {
-        this.roomId = roomId;
-        this.roomName = roomName;
+    public SalleJeu(int salleId, String salleName) {
+        this.salleId = salleId;
+        this.salleName = salleName;
         this.maxPlayers = 4; // Default max players
         this.currentPlayers = 0;
         this.gameStarted = false;
@@ -27,12 +27,12 @@ public class SalleJeu {
         this.arrivals = new Arrivals();
     }
 
-    public int getRoomId() {
-        return roomId;
+    public int getsalleId() {
+        return salleId;
     }
 
-    public String getRoomName() {
-        return roomName;
+    public String getsalleName() {
+        return salleName;
     }
 
     public int getMaxPlayers() {
