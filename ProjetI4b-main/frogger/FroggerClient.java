@@ -11,42 +11,16 @@ public class FroggerClient {
 
     public static void main(String[] args) {
         try {
-            socket = new Socket("172.31.18.70", 12345);
+            socket = new Socket("localhost", 12345);
             System.out.println("Connecté au serveur Frogger !");
 
-            // flux envoyer et recevoir des données
+           
             input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             output = new PrintWriter(socket.getOutputStream(), true);
 
-            // rejoindre jeu
+            
             output.println("JOIN");
 
-            //  recevoir messages serveur
-            // Thread receiveThread = new Thread(() -> {
-            //     try {
-            //         String message;
-            //         while (running && (message = input.readLine()) != null) {
-            //             if (message.startsWith("INPUT:")) {
-            //                 String prompt = message.substring(6);
-            //                 System.out.println(prompt);
-            //             } 
-                        
-            //             else if (message.equals("MOVE")) {
-                            
-            //                 output.println("BOUGE");
-                            
-            //             }
-                       
-            //             else {
-            //                 System.out.println(message);
-            //             }
-            //         }
-            //     } catch (IOException e) {
-            //         if (running) {
-            //             System.out.println("Déconnecté du serveur: " + e.getMessage());
-            //         }
-            //     }
-            // });
             Thread receiveThread = new Thread(() -> {
                 try {
                     String message;
@@ -55,7 +29,10 @@ public class FroggerClient {
                         if (message.startsWith("INPUT:")) {
                             String prompt = message.substring(6);
                             System.out.println(prompt);
-                        } else if (message.equals("MOVE")) {
+                        } else if (message.equals("QUIT")) {
+                            System.out.println("Vous avez quitté le jeu.");
+                            System.exit(0);
+                        }else if(message.equals("MOVE")){
                             output.println("BOUGE");
                         } else {
                             System.out.println(message);

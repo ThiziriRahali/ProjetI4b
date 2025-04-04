@@ -1,12 +1,10 @@
 
 class PlayerInfo {
-    private static final int WIDTH = 10;
-    private static final int HEIGHT = 10;
     private static final String FROG_TET = "🦎";
     private static final String FROG_CHAR = "🐸";
     private static final String FROG_DRAG = "🐲";
     private static final String FROG_DEAD = "⚰️";
-    private static final int LIVES_MAX = 3;
+    private static final int LIVES_MAX = FroggerGamer.LIVES_MAX;
     private static final String FROG_PRINCESS = "👸";
     private static final String FROG_MEAN = "😈";
     private int currentsalleId;
@@ -38,8 +36,8 @@ class PlayerInfo {
     }
 
     private void initPlayer() {
-        this.frogX = WIDTH / 2;
-        this.frogY = HEIGHT - 1;
+        this.frogX = FroggerGamer.WIDTH / 2;
+        this.frogY = FroggerGamer.HEIGHT - 1;
         this.lives = LIVES_MAX;
         this.isPlaying = true;
         this.niveau = 0;

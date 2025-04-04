@@ -19,35 +19,12 @@ class Equipe {
         this.joueurs.add(joueur);
     }
 
-
-    public void removeJoueur(PlayerInfo joueur) {
-        this.joueurs.remove(joueur);
-    }
-    public int getIdEquipe() {
-        return idEquipe;
-    }
-
-
-    public void setNomEquipe(String nomEquipe) {
-        this.nomEquipe = nomEquipe;
-    }
     public String getNomEquipe() {
         return nomEquipe;
     }
 
-
-    public int getScore() {
-        return score;
-    }
     public synchronized void setScore(int score) {
         this.score = score;
     }
 
-
-    public ArrayList<PlayerInfo> getJoueurs() {
-        return joueurs;
-    }
-    public int getNbJoueurs(){
-        return joueurs.size();
-    }
 }

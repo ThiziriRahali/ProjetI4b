@@ -7,10 +7,8 @@ class Obstacle extends Thread {
     private int x;
     private final int y;
     private boolean active = true;
-    private static final int WIDTH = 10;
     private static final String OBSTACLE_CHARA = "🚣";
     private static final String OBSTACLE_CHARB = "🦅";
-    public static final String FINISH_LINE_CHAR = "🏁";
     
     public Obstacle(int x, int y) {
         this.x = x;
@@ -21,9 +19,9 @@ class Obstacle extends Thread {
         Random rand = new Random();
         while (active) {
             try {
-                Thread.sleep(rand.nextInt(1000) + 500);
+                Thread.sleep((3-FroggerGamer.DIFFICULTE)*500 + 500);
                 moveObstacle();
-                
+                 
                 
                 FroggerGamer.checkAllPlayersCollisions();
             } catch (InterruptedException e) {
@@ -33,11 +31,11 @@ class Obstacle extends Thread {
         }
     }
     public static int getWIDTH() {
-        return WIDTH;
+        return FroggerGamer.WIDTH;
     }
     
     private void moveObstacle() {
-        x = (x + 1) % WIDTH;
+        x = (x + 1) % FroggerGamer.WIDTH;
     }
     
     public void stopObstacle() {

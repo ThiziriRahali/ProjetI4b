@@ -12,7 +12,6 @@ public class SalleJeu {
     private Obstacle[] obstaclesA;
     private Obstacle[] obstaclesB;
     private Arrivals arrivals;
-    private static final int HEIGHT = 10;
     private int currentPlayers;
     private NotreTimer timer;
     public List<Equipe> equipes;
@@ -96,8 +95,8 @@ public class SalleJeu {
         obstaclesB = new Obstacle[5];
         
         for (int i = 0; i < obstaclesA.length; i++) {
-            obstaclesA[i] = new Obstacle(i * 4, HEIGHT / 2 - 2);
-            obstaclesB[i] = new Obstacle(i * 4, HEIGHT / 2 + 2);
+            obstaclesA[i] = new Obstacle(i * 4, FroggerGamer.HEIGHT / 2 - 2);
+            obstaclesB[i] = new Obstacle(i * 4, FroggerGamer.HEIGHT / 2 + 2);
             obstaclesA[i].start();
             obstaclesB[i].start();
         }
