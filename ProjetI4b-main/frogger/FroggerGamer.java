@@ -16,6 +16,7 @@ public class FroggerGamer {
     public static int NbrPlayer =3; 
     private static final Map<Integer, SalleJeu> sallesJeu = new ConcurrentHashMap<>();
     private static int nextsalleId = 1;
+    private static  NotreTimer timer;
 
 
     private static synchronized SalleJeu createSalleJeu(String salleName) {
@@ -332,7 +333,7 @@ public class FroggerGamer {
         client.sendMessage(sb.toString());
     }
     
-    // Nouvelle méthode pour obtenir un joueur à une position spécifique dans une salle donnée
+    
     public static PlayerInfo getPlayerAtInSalle(int x, int y, SalleJeu salle) {
         for (PlayerInfo player : salle.players) {
             if (player.frogX == x && player.frogY == y) {
@@ -358,46 +359,12 @@ public class FroggerGamer {
             }
         }
     }
-    // private static void checkCollisionForPlayer(PlayerInfo player) {
-    //     ClientHandler client = getClientForPlayer(player);
-       
-    //     // Vérifier collisions avec autres joueurs
-    //     for (PlayerInfo otherPlayer : players.values()) {
-    //         if (player != otherPlayer) { 
-    //             MangerMiam(player, otherPlayer);
-    //         }
-    //     }
-    //     if (player.lives <= 0) {
-    //         return;
-    //     }
-    
-       
-    //     if (isObstacleAt(player.frogX, player.frogY)) {
-    //         player.lives--;
-    
-    //         client.sendMessage("\033[H\033[2J");
-    //         System.out.flush();
-            
-    //         client.sendMessage("💀 Un obstacle vous a écrasé ! Il vous reste " + player.lives + " vies. 💀");
-            
-    //         if (player.lives <= 0) {
-    //             GameOver(client);
-    //             client.sendMessage("Game Over ! Vous avez perdu toutes vos vies.");
-    //             player.isPlaying = false;
-    //             player.running = false;
-    //             askreplay(client);
-               
-    //         } else {
-    //             resetFrog(player, 0, HEIGHT - 1);
-    //         }
-    //     }
-    // }
     private static void checkCollisionForPlayer(PlayerInfo player) {
         ClientHandler client = getClientForPlayer(player);
         SalleJeu salle = getSalleJeuById(player.getCurrentsalleId());
         if (salle == null) return;
        
-        // Vérifier collisions avec autres joueurs de la même salle
+        
         for (PlayerInfo otherPlayer : salle.players) {
             if (player != otherPlayer) { 
                 MangerMiam(player, otherPlayer);
@@ -420,9 +387,9 @@ public class FroggerGamer {
                 client.sendMessage("Game Over ! Vous avez perdu toutes vos vies.");
                 player.isPlaying = false;
                 player.running = false;
-                // resetFrog(player, WIDTH, HEIGHT - 1);
+                salle.removePlayer(player);
 
-                askreplay(client);
+                // askreplay(client);
                
             } else {
                 resetFrog(player, 0, HEIGHT - 1);
@@ -502,6 +469,7 @@ public class FroggerGamer {
                 
                 if (W!= null) {
                     getClientForPlayer(W).sendMessage(goodJob());
+                    salle.removePlayer(player);
                     notifysallePlayers(salle, "🎖️ L'équipe \""+ W.getEquipe().getNomEquipe() +"\" remporte la partie avec " + W.cpt + " arrivées ! 🎖️");
                 }
                 player.niveau+=player.cpt;
@@ -517,6 +485,12 @@ public class FroggerGamer {
             }
         }
         return null;
+    }
+
+    public static void startTimer(int durationInSeconds, Runnable onTimeUp) {
+        
+        timer = new NotreTimer(durationInSeconds, onTimeUp);
+        timer.start();
     }
     
    
@@ -544,6 +518,13 @@ public class FroggerGamer {
                 ClientHandler clientHandler = new ClientHandler(clientSocket, player);
                 clients.put(clientSocket, clientHandler);
                 clientHandler.start();
+                // startTimer(90, () -> { 
+                //     clientHandler.sendMessage("malheureseusement, le temps est écoulé , la partie se lancera en solo");
+                //     afficherMenuPrincipalClient(clientHandler);
+                // });
+
+
+               
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -619,6 +600,16 @@ public class FroggerGamer {
         "⠀⠀⠀⣿⣿⡇⠀⠀⢀⣴⣿⣿⡟⠀⣿⣿⣿⣿⠃⠀⠀⣾⣿⣿⡿⠿⠛⢛⣿⡟⠀⠀⠀⠀⠀⠻⠿⠀⠀\n" +
         "⠀⠀⠀⠹⣿⣿⣶⣾⣿⣿⣿⠟⠁⠀⠸⢿⣿⠇⠀⠀⠀⠛⠛⠁⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀\n" +
         "⠀⠀⠀⠀⠈⠙⠛⠛⠛⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀");
+        PlayerInfo player = players.get(client.socket);
+        SalleJeu salle = getSalleJeuById(player.getCurrentsalleId());
+        
+        if (salle != null) {
+            salle.removePlayer(player); // Retirer le joueur de la salle
+        }
+        
+        player.isPlaying = false;
+        player.running = false;
+        askreplay(client);
         
     }
     private static void Welcome(ClientHandler client) { 
@@ -1066,7 +1057,7 @@ public class FroggerGamer {
                         GameOver(cP2);
                         cP2.sendMessage("Game Over ! Vous avez perdu toutes vos vies.");
                         p2.isPlaying = false;
-                        askreplay(cP2);
+                        // askreplay(cP2);
 
                         return;
                     }
@@ -1087,7 +1078,7 @@ public class FroggerGamer {
                         GameOver(cP1);
                         cP1.sendMessage("Game Over ! Vous avez perdu toutes vos vies.");
                         p1.isPlaying = false;
-                        askreplay(cP1);
+                        // askreplay(cP1);
                         return;
                     }
                 }

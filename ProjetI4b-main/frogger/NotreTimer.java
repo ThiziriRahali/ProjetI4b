@@ -9,6 +9,12 @@ class NotreTimer extends Thread {
         this.onTimeUp = onTimeUp;
         this.salle = salle;
     }
+    public NotreTimer(int durationInSeconds, Runnable onTimeUp ) {
+        this.tempsRestant = durationInSeconds;
+        this.onTimeUp = onTimeUp;
+        this.salle = null;
+    }
+
 
     @Override
     public void run() {
@@ -27,13 +33,13 @@ class NotreTimer extends Thread {
         }
 
         if (running && tempsRestant == 0) {
-            onTimeUp.run(); // Exécuter l'action lorsque le temps est écoulé
+            onTimeUp.run(); 
         }
     }
 
     public void stopTimer() {
         running = false;
-        this.interrupt(); // Interrompre le thread si nécessaire
+        this.interrupt(); 
     }
 
     public int gettempsRestant() {

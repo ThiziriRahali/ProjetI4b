@@ -170,9 +170,8 @@ public class SalleJeu {
             pasToi = !pasToi; 
         }
     
-        System.out.println("Répartition terminée :");
-        System.out.println("Équipe 1 : " + equipe1.getNomEquipe() + " (" + equipe1.getNbJoueurs() + " joueurs)");
-        System.out.println("Équipe 2 : " + equipe2.getNomEquipe() + " (" + equipe2.getNbJoueurs() + " joueurs)");
+        System.out.println("Répartition terminée !!");
+
     }
 
     public void setTimer(NotreTimer timer) {
