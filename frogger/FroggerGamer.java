@@ -314,6 +314,7 @@ public class FroggerGamer {
             ClientHandler client = getClientForPlayer(player);
             if (client != null) {
                 player.cpt++;
+                player.niveau++;
                 
                 notifysallePlayers(salle, "🎉 Félicitations ! Un prince est apparu !");
                 resetFrog(player, 0 ,HEIGHT - 1);
@@ -341,8 +342,8 @@ public class FroggerGamer {
                     salle.removePlayer(player);
                     notifysallePlayers(salle, "🎖️ L'équipe \""+ W.getEquipe().getNomEquipe() +"\" remporte la partie avec " + W.cpt + " arrivées ! 🎖️");
                 }
-                player.niveau+=player.cpt;
-                askreplay(client);
+                
+                
             }
         }
     }
