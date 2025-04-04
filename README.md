@@ -16,12 +16,10 @@ Notre implémentation de Frogger repose sur les principes fondamentaux des syst�
   - Jeu chronométré où le meilleur score l’emporte.
 
 - 🐊 **Éléments de gameplay étendus** :
-  - Présence d’alligators, de serpents et de tondeuses pour plus de difficulté.
-  - Classement des joueurs en fonction des parties gagnées et du niveau atteint.
+  - Présence d'aiglle, et de kayakistes enragés pour plus de difficulté.
 
 - 🎮 **Architecture modulaire** :
   - Serveur multi-clients et multi-parties.
-  - Adaptation dynamique de la difficulté en fonction du classement des joueurs.
 
 ## 🚀 Technologies utilisées
 
@@ -45,25 +43,6 @@ cd ProjetI4b
 mkdir -p bin
 javac -d bin $(find src -name "*.java")
 ```
-
-### 3️⃣ Lancer le serveur
-
-```bash 
-java -cp bin server.Server
-```
-
-### 4️⃣ Lancer un client
-
-```bash
-java -cp bin client.Client
-```
-
-## 📜 Organisation du code
-
-- `src/server/` : Gestion du serveur de jeu.
-- `src/client/` : Implémentation du client joueur.
-- `src/game/` : Logique du jeu (mécanismes, règles, obstacles).
-- `src/utils/` : Classes utilitaires et configuration.
 
 ## 📢 Contributeurs
 
