@@ -17,6 +17,7 @@ public class FroggerGamer {
     private static final Map<Integer, SalleJeu> sallesJeu = new ConcurrentHashMap<>();
     private static int nextsalleId = 1;
     private static  NotreTimer timer;
+    private static boolean PartieStarted;
 
 
     private static synchronized SalleJeu createSalleJeu(String salleName) {
@@ -37,9 +38,8 @@ public class FroggerGamer {
     public static int nbVieActuel;
     public static Arrivals A = new Arrivals();
     private static final int DIFFICULTE = 500; 
-    private static volatile boolean PartieStarted;
     
-    // multijoueur
+    
     private static final Map<Socket, ClientHandler> clients = new ConcurrentHashMap<>();
     private static final Map<Socket, PlayerInfo> players = new ConcurrentHashMap<>();
     private static final Map<Socket, Equipe> equipes = new ConcurrentHashMap<>();
@@ -48,7 +48,7 @@ public class FroggerGamer {
 
    
     
-    //  client connecté
+
     static class ClientHandler extends Thread {
         private Socket socket;
         private BufferedReader input;
@@ -156,21 +156,7 @@ public class FroggerGamer {
         }
     }
     
-    // private static void startWaitingThread() {
-    //     new Thread(() -> {
-    //         while (!PartieStarted) {
-    //             int remainingPlayers = NbrPlayer - players.size();
-    //             if (remainingPlayers > 0) {
-    //                 sendAllMessage(" \n Patiente, il reste " + remainingPlayers + " joueur(s) avant de lancer la partie.");
-    //             } else {
-    //                 sendAllMessage("Tous les joueurs sont connectés. La partie commence maintenant !");
-    //                 startGameForClient(client);();
-    //                 break;
-    //             }
-    //             pause(5000);
-    //         }
-    //     }).start();
-    // }
+  
 
     private static void afficherMenuPrincipalClient(ClientHandler client) {
         client.sendMessage("\n😊  Menu Principal ");
@@ -220,60 +206,6 @@ public class FroggerGamer {
         
     }
     
-    // private static void renderForClient(ClientHandler client, PlayerInfo player) {
-    //     client.sendMessage("\033[H\033[2J");
-    //     System.out.flush();
-    //     StringBuilder sb = new StringBuilder();
-    //     sb.append("Vies restantes : ").append(player.lives).append(" | Équipe: ").append(player.getEquipe().getNomEquipe()).append("\n");
-    //     sb.append("Déplacez la grenouille (z/q/s/d) ou appuyez sur 'x' pour arrêter de jouer : ").append("\n");
-        
-    //     for (int y = 0; y < HEIGHT; y++) {
-    //         for (int x = 0; x < WIDTH; x++) {
-    //             if (Arrivals.isWPosition(x, y)) {
-    //                 sb.append(FROG_WIN);
-    //             } else if (y == 0) {
-    //                 if(x % 4 == 0) {
-    //                     sb.append(FINISH_LINE_CHAR);
-    //                 } else {
-    //                     sb.append(WALL_CHAR);
-    //                 }
-    //             } else if (getPlayerAt(x, y) != null) {
-    //                 sb.append(getPlayerAt(x, y).getEmojiNiveau());
-    //             }else if (y == HEIGHT / 2) {
-    //                 sb.append(TERRE_PLEIN_CHAR);
-    //             }  else if (isObstacleAt(x, y)) {
-    //                 boolean isObstacleA = false;
-    //                 for (Obstacle obs : obstaclesA) {
-    //                     if (obs.getX() == x && obs.getY() == y) {
-    //                         sb.append(obs.getCharA());  
-    //                         isObstacleA = true;
-    //                         break;
-    //                     }
-    //                 }
-                    
-    //                 if (!isObstacleA) {
-    //                     for (Obstacle obs : obstaclesB) {
-    //                         if (obs.getX() == x && obs.getY() == y) {
-    //                             sb.append(obs.getCharB());  
-    //                             break;
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //             else if (y <=4 && y != 0 && y != HEIGHT-1 )  {
-    //                 sb.append(WAVE_CHAR);
-    //             } 
-    //             else if ( y == HEIGHT-1 )  {
-    //                 sb.append(DEPART_CHAR);
-    //             }else {
-    //                 sb.append(ROAD_CHAR);
-    //             }
-    //             sb.append("\t");
-    //         }
-    //         sb.append("\n");
-    //     }
-    //     client.sendMessage(sb.toString());
-    // }
     
     private static void renderForClient(ClientHandler client, PlayerInfo player) {
         SalleJeu salle = getSalleJeuById(player.getCurrentsalleId());
@@ -518,12 +450,7 @@ public class FroggerGamer {
                 ClientHandler clientHandler = new ClientHandler(clientSocket, player);
                 clients.put(clientSocket, clientHandler);
                 clientHandler.start();
-                // startTimer(90, () -> { 
-                //     clientHandler.sendMessage("malheureseusement, le temps est écoulé , la partie se lancera en solo");
-                //     afficherMenuPrincipalClient(clientHandler);
-                // });
-
-
+            
                
             }
         } catch (IOException e) {
@@ -532,30 +459,6 @@ public class FroggerGamer {
     }
         
 
-        // private static void startGameForAllClients() {
-            
-        //     PartieStarted = true;
-        //     Arrivals.ClearwPositions();
-            
-        //     for (PlayerInfo player : players.values()) {
-        //         player.isPlaying = false;
-        //         player.running = false;
-        //         player.lives = LIVES_MAX;
-        //         player.cpt = 0;
-        //     }
-            
-        //     sendAllMessage("La partie commence ! Bonne chance à tous !");
-        //     int i = 0;
-            
-        //     for (ClientHandler client : clients.values()) {
-        //         client.player.frogX = i;
-        //         client.player.frogY = HEIGHT - 1;
-        //         startGameForClient(client);
-        //         i += 2;
-        //     }
-        // }
-
-       
 
     private static String goodJob() {
         return "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀                    ⠀⣀⣀⣀⣀⣀⣀⣤⣤⣤⣤⣤⣤⣤⣤⣤⣶⣶⣦⠤⡤⠶\n" +
@@ -610,6 +513,7 @@ public class FroggerGamer {
         player.isPlaying = false;
         player.running = false;
         askreplay(client);
+
         
     }
     private static void Welcome(ClientHandler client) { 
@@ -863,83 +767,7 @@ public class FroggerGamer {
         }
     }
     
-    // private static void startGameForsalle(SalleJeu salle) {
-    //     salle.setGameStarted(true);
-    //     if (salle.getGameMode().equals("Competitif")){
-            
-            
-    //     }
-        
-    //     salle.initializeGame();
-        
-    //     notifysallePlayers(salle, "😊 La partie commence dans la salle : " + salle.getsalleName() + " !");
-    //     int i = 0;
-    //     for (PlayerInfo player : salle.players) {
-    //         if (player.getCurrentsalleId() == salle.getsalleId()) {
-    //             ClientHandler client = getClientForPlayer(player);
-    //             if (client != null) {
-    //                 player.isPlaying = true;
-    //                 player.running = true;
-    //                 player.lives = LIVES_MAX;
-    //                 player.cpt = 0;
-    //                 resetFrog(player, i , HEIGHT - 1);
-    //                 i += 2;
-                    
-    //                 Thread gameThread = new Thread(() -> {
-    //                     while (player.isPlaying && player.running && salle.isGameStarted()) {
-    //                         renderForClient(client, player);
-    //                         client.requestMove();
-    //                         pause(10);
-    //                     }
-    //                 });
-    //                 gameThread.start();
-    //             }
-    //         }
-    //     }
-        
-    //     if (salle.getGameMode().equals("Collaboratif")) {
-    //         chooseMechantPlayerForsalle(salle);
-    //     }
-    // }
-    // private static void startGameForsalle(SalleJeu salle) {
-    //     salle.setGameStarted(true);
-    //     salle.initializeGame();
-    //     notifysallePlayers(salle, "😊 La partie commence dans la salle : " + salle.getsalleName() + " !");
-        
-    //     int i = 0;
-    //     for (PlayerInfo player : salle.players) {
-    //         if (player.getCurrentsalleId() == salle.getsalleId()) {
-    //             ClientHandler client = getClientForPlayer(player);
-    //             if (client != null) {
-    //                 player.isPlaying = true;
-    //                 player.running = true;
-    //                 player.lives = LIVES_MAX;
-    //                 player.cpt = 0;
-    //                 resetFrog(player, i, HEIGHT - 1);
-    //                 i += 2;
-    
-    //                 Thread gameThread = new Thread(() -> {
-    //                     while (player.isPlaying && player.running && salle.isGameStarted()) {
-    //                         renderForClient(client, player);
-    //                         client.requestMove();
-    //                         pause(10);
-    //                     }
-    //                 });
-    //                 gameThread.start();
-    //             }
-    //         }
-    //     }
-    
-    //     if (salle.getGameMode().equals("Collaboratif")) {
-    //                 chooseMechantPlayerForsalle(salle);
-    //             }
-    //     if (salle.getGameMode().equals("Competitif")) {
-    //         salle.startTimer(60, () -> { 
-    //             notifysallePlayers(salle, "⏰ Temps écoulé ! La partie est terminée !");
-    //             endGameForCompetitiveMode(salle);
-    //         });
-    //     }
-    // }
+
     private static void startGameForsalle(SalleJeu salle) {
         salle.setGameStarted(true);
         salle.initializeGame();
@@ -975,6 +803,10 @@ public class FroggerGamer {
             salle.startTimer(90, () -> { 
                 notifysallePlayers(salle, "⏰ Temps écoulé ! La partie est terminée !");
                 endGameForCompetitiveMode(salle);
+                if(!PartieStarted){
+                    timer.stopTimer();
+                }
+
             });
         }
       
@@ -1101,51 +933,6 @@ public class FroggerGamer {
 
         }
     }
-    // private static void choisirJoueurMechant() {
-    //     System.out.print("je suis mechant");
-    //     while (players.size() < NbrPlayer) {
-    //         sendAllMessage("En attente de joueurs pour choisir un méchant...");
-    //         pause(5000);
-
-    //     }
-    
-    //     List<PlayerInfo> joueurs = new ArrayList<>(players.values());
-    //     Random random = new Random();
-    //     PlayerInfo mechant = joueurs.get(random.nextInt(joueurs.size()));
-    
-    //     mechant.isCarnivore = true; 
-    //     ClientHandler clientMechant = getClientForPlayer(mechant);
-    
-    //     if (clientMechant != null) {
-    //         clientMechant.sendMessage("😈 Vous avez été choisi comme le joueur méchant !");
-    //     }
-        
-    //     sendAllMessage("Un joueur méchant a été désigné ! Faites attention !");
-    // }
-    
-    // private static boolean isObstacleAt(int x, int y) {
-    //     for (Obstacle obs : obstaclesA) {
-    //         if (obs.getX() == x && obs.getY() == y) {
-    //             return true;
-    //         }
-    //     }
-    //     for (Obstacle obs : obstaclesB) {
-    //         if (obs.getX() == x && obs.getY() == y) {
-    //             return true;
-    //         }
-    //     }
-    //     return false;
-    // }
-    
-    // private static void stopAllObstacles() {
-    //     if (obstacles != null) {
-    //         for (Obstacle obs : obstacles) {
-    //             if (obs != null) {
-    //                 obs.stopObstacle();
-    //             }
-    //         }
-    //     }
-    // }
 
 
     private static void pause(int ms) {
